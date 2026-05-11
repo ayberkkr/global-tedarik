@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+import numpy as np # Balyoz kütüphanemiz
 
 app = FastAPI(title="Haci Global Visibility Hub API")
 
@@ -31,9 +32,10 @@ le = LabelEncoder()
 for col in kategorik_sutunlar:
     X_clean[col] = le.fit_transform(X_clean[col].astype(str))
 
-X_sablon = X_clean.iloc[[0]].copy()
+# ŞABLONU KESİN OLARAK FLOAT YAPIYORUZ
+X_sablon = X_clean.iloc[[0]].copy().astype(float)
 for col in X_clean.columns:
-    X_sablon[col] = float(X_clean[col].median()) # Tüm veriler KESİNLİKLE float
+    X_sablon[col] = float(X_clean[col].median())
 
 @app.get("/")
 def home():
@@ -41,19 +43,7 @@ def home():
 
 @app.post("/tahmin_et")
 def risk_tahmin_et(veri: dict):
-    test_verisi = X_sablon.copy()
-    
-    # 1. GÜVENLİ EŞLEŞTİRME (Shipping_Mode BURADAN ÇIKARILDI)
-    sutun_eslesmeleri = {
-        "Order_City": "Order City", 
-        "Category_Id": "Category Id"
-    }
-    
-    for frontend_key, dataset_key in sutun_eslesmeleri.items():
-        if frontend_key in veri and dataset_key in test_verisi.columns:
-            test_verisi[dataset_key] = float(veri[frontend_key]) # Ne gelirse gelsin float yap
-
-    # 2. TERCÜMAN (Doğrudan float olarak işler)
+    # 1. TERCÜMAN
     mode_map = {
         "First Class": 0.0,
         "Same Day": 1.0,
@@ -61,23 +51,34 @@ def risk_tahmin_et(veri: dict):
         "Standard Class": 3.0
     }
     
+    # 2. VERİLERİ TOPLA VE GÜVENLİĞE AL
     gelen_mod_str = str(veri.get("Shipping_Mode", "Standard Class"))
-    
     if gelen_mod_str.isdigit():
-        test_verisi["Shipping Mode"] = float(gelen_mod_str)
+        shipping_mode_val = float(gelen_mod_str)
     else:
-        test_verisi["Shipping Mode"] = float(mode_map.get(gelen_mod_str, 3.0))
+        shipping_mode_val = float(mode_map.get(gelen_mod_str, 3.0))
 
-    # 3. Riski Hesapla
-    def calculate_base_risk(df_input, w_desc):
-        # CatBoost'a girmeden saniyeler önce ÇELİK YELEK giydiriyoruz
-        df_numeric = df_input.astype(float) 
+    order_city_val = float(veri.get("Order_City", X_sablon["Order City"].values[0]))
+    category_id_val = float(veri.get("Category_Id", X_sablon["Category Id"].values[0]))
+
+    # 3. RİSK HESAPLAMA MOTORU
+    def calculate_base_risk(mode_val, city_val, cat_val, w_desc):
+        # Şablonu kopyala
+        df_input = X_sablon.copy()
         
+        # Sütunlara SADECE FLOAT bas
+        df_input["Shipping Mode"] = mode_val
+        df_input["Order City"] = city_val
+        df_input["Category Id"] = cat_val
+        
+        # CATBOOST İÇİN NİHAİ ZIRH: Tüm DataFrame'i numpy array'e ve float'a zorla
+        df_input = df_input.astype(float)
+
         try:
-            olasiliklar = model.predict_proba(df_numeric)[0]
+            olasiliklar = model.predict_proba(df_input)[0]
             risk = float(olasiliklar[1] * 100)
         except AttributeError:
-            tahmin = model.predict(df_numeric)
+            tahmin = model.predict(df_input)
             risk = 85.0 if tahmin[0] == 1 else 15.0
 
         w_desc_low = w_desc.lower()
@@ -89,7 +90,8 @@ def risk_tahmin_et(veri: dict):
             risk = max(risk - 10.0, 2.0)
         return risk
 
-    current_risk = calculate_base_risk(test_verisi, veri.get("weather_desc", ""))
+    # Şu anki riski hesapla
+    current_risk = calculate_base_risk(shipping_mode_val, order_city_val, category_id_val, veri.get("weather_desc", ""))
 
     # 4. Lojistik Danışmanı (Tavsiye Motoru)
     all_modes = {
@@ -103,9 +105,8 @@ def risk_tahmin_et(veri: dict):
 
     for display_name, mode_str in all_modes.items():
         if mode_str != gelen_mod_str:
-            alt_test = test_verisi.copy()
-            alt_test["Shipping Mode"] = float(mode_map.get(mode_str, 3.0))
-            alt_risk = calculate_base_risk(alt_test, veri.get("weather_desc", ""))
+            alt_mode_val = float(mode_map.get(mode_str, 3.0))
+            alt_risk = calculate_base_risk(alt_mode_val, order_city_val, category_id_val, veri.get("weather_desc", ""))
             
             if alt_risk < best_alt_risk:
                 best_alt_risk = alt_risk
