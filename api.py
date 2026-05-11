@@ -43,8 +43,19 @@ def home():
 def risk_tahmin_et(veri: dict):
     test_verisi = X_sablon.copy()
     
+    # 💡 İŞTE BURASI: Kelimeleri modelin anladığı sayılara çeviren TERCÜMAN
+    mode_map = {
+        "First Class": 0,
+        "Same Day": 1,
+        "Second Class": 2,
+        "Standard Class": 3
+    }
+    
+    # Gelen İngilizce kelimeyi alıp sayıya çeviriyoruz ve modele öyle veriyoruz
+    gelen_mod_str = veri.get("Shipping_Mode", "Standard Class")
+    test_verisi["Shipping Mode"] = mode_map.get(gelen_mod_str, 3)
+    
     sutun_eslesmeleri = {
-        "Shipping_Mode": "Shipping Mode",
         "Order_City": "Order City", 
         "Category_Id": "Category Id"
     }
@@ -53,7 +64,6 @@ def risk_tahmin_et(veri: dict):
         if frontend_key in veri and dataset_key in test_verisi.columns:
             test_verisi[dataset_key] = veri[frontend_key]
 
-    # Riski hesaplayan iç fonksiyon (Tekrar tekrar kullanabilmek için)
     def calculate_base_risk(df_input, w_desc):
         try:
             olasiliklar = model.predict_proba(df_input)[0]
@@ -71,8 +81,7 @@ def risk_tahmin_et(veri: dict):
             risk = max(risk - 10.0, 2.0)
         return risk
 
-    # Kullanıcının seçtiği mod için risk hesapla
-    current_mode = veri.get("Shipping_Mode", "Standard Class")
+    # Seçili modun riskini hesapla
     current_risk = calculate_base_risk(test_verisi, veri.get("weather_desc", ""))
 
     # Lojistik Danışmanı: Diğer taşıma modlarını gizlice test et
@@ -85,13 +94,12 @@ def risk_tahmin_et(veri: dict):
     best_alt_mode = None
     best_alt_risk = current_risk
 
-    for display_name, dataset_val in all_modes.items():
-        if dataset_val != current_mode:
+    for display_name, mode_str in all_modes.items():
+        if mode_str != gelen_mod_str:
             alt_test = test_verisi.copy()
-            alt_test["Shipping Mode"] = dataset_val
+            alt_test["Shipping Mode"] = mode_map.get(mode_str, 3) # Test ederken de sayıya çevir
             alt_risk = calculate_base_risk(alt_test, veri.get("weather_desc", ""))
             
-            # Eğer diğer mod daha düşük riskliyse, onu en iyi alternatif yap
             if alt_risk < best_alt_risk:
                 best_alt_risk = alt_risk
                 best_alt_mode = display_name
@@ -105,8 +113,7 @@ def risk_tahmin_et(veri: dict):
         "Tavsiye": ""
     }
 
-    # Eğer bulduğumuz alternatif mod, şu anki riskten %5 daha iyiyse tavsiye ver
     if best_alt_mode and (current_risk - best_alt_risk > 5.0):
-        response_data["Tavsiye"] = f"💡 AI Tip: Using {best_alt_mode} reduces the risk to {round(best_alt_risk, 2)}%."
+        response_data["Tavsiye"] = f"Using {best_alt_mode} reduces the risk to {round(best_alt_risk, 2)}%."
 
     return response_data
