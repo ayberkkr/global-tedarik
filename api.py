@@ -28,13 +28,18 @@ kategorik_sutunlar = X_clean.select_dtypes(include=['object']).columns.tolist()
 X_clean[kategorik_sutunlar] = X_clean[kategorik_sutunlar].fillna("Unknown")
 X_clean = X_clean.fillna(0)
 
-le = LabelEncoder()
+# Her kategorik sütun için ayrı bir LabelEncoder tutuyoruz ki veriyi doğru dönüştürebilelim
+encoders = {}
 for col in kategorik_sutunlar:
+    le = LabelEncoder()
+    # Model eğitilirken veri nasıl string yapıldıysa, burada da aynı şekilde fit ediyoruz.
     X_clean[col] = le.fit_transform(X_clean[col].astype(str))
+    encoders[col] = le
 
-# Şablon Değerlerini ve En Önemlisi SÜTUN SIRASINI Kaydediyoruz
-sutun_sirasi = list(X_clean.columns)
-sablon_degerleri = {col: float(X_clean[col].median()) for col in sutun_sirasi}
+# Şablonu, her sütunun median değeri ile oluşturuyoruz (sayısal)
+X_sablon = X_clean.iloc[[0]].copy()
+for col in X_clean.columns:
+    X_sablon[col] = X_clean[col].median()
 
 @app.get("/")
 def home():
@@ -43,42 +48,50 @@ def home():
 @app.post("/tahmin_et")
 def risk_tahmin_et(veri: dict):
     
-    # 1. TERCÜMAN
+    # Şablonu kopyalayarak başlıyoruz. Bu şablon tamamen dönüştürülmüş sayısal verilerden oluşur.
+    test_verisi = X_sablon.copy()
+    
+    # 1. TERCÜMAN (İngilizce kelimeleri veri setindeki orijinal metinlerine çevirir)
     mode_map = {
-        "First Class": 0.0,
-        "Same Day": 1.0,
-        "Second Class": 2.0,
-        "Standard Class": 3.0
+        "First Class": "First Class",
+        "Same Day": "Same Day",
+        "Second Class": "Second Class",
+        "Standard Class": "Standard Class"
     }
     
     gelen_mod_str = str(veri.get("Shipping_Mode", "Standard Class"))
-    secili_mod_degeri = float(gelen_mod_str) if gelen_mod_str.isdigit() else float(mode_map.get(gelen_mod_str, 3.0))
+    orijinal_mod_metni = mode_map.get(gelen_mod_str, "Standard Class")
 
-    order_city_val = float(veri.get("Order_City", sablon_degerleri["Order City"]))
-    category_id_val = float(veri.get("Category_Id", sablon_degerleri["Category Id"]))
-
-    # 2. RİSK HESAPLAMA MOTORU (Numpy Balyozu)
-    def calculate_base_risk(mode_val, city_val, cat_val, w_desc):
-        # Önce değerleri sözlüğe yaz
-        anlik_degerler = sablon_degerleri.copy()
-        anlik_degerler["Shipping Mode"] = mode_val
-        anlik_degerler["Order City"] = city_val
-        anlik_degerler["Category Id"] = cat_val
-        
-        # Sütun sırasını BOZMADAN sadece değerleri bir listeye (array) diziyoruz!
-        sadece_sayilar = []
-        for col in sutun_sirasi:
-            sadece_sayilar.append(anlik_degerler[col])
-            
-        # CatBoost'a Pandas DataFrame yerine, 2 boyutlu çıplak bir SAYI DİZİSİ yolluyoruz.
-        # Böylece "Hani nerede Shipping Mode?" diye soramayacak!
-        saf_array = np.array([sadece_sayilar], dtype=float)
-
+    # 2. VERİLERİ ŞABLONA YERLEŞTİRME VE DÖNÜŞTÜRME
+    # Order City ve Category Id zaten sayısal, direkt şablona yazıyoruz
+    test_verisi["Order City"] = float(veri.get("Order_City", X_sablon["Order City"].values[0]))
+    test_verisi["Category Id"] = float(veri.get("Category_Id", X_sablon["Category Id"].values[0]))
+    
+    # 💡 KRİTİK NOKTA: Shipping Mode'u, modeli eğitirken kullandığımız encoder ile sayıya çeviriyoruz!
+    # Eğer "Shipping Mode" sütunu kategorik ise (ki öyle):
+    if "Shipping Mode" in encoders:
         try:
-            olasiliklar = model.predict_proba(saf_array)[0]
+            # Sadece bu kelimeyi dönüştür
+            sayisal_deger = encoders["Shipping Mode"].transform([orijinal_mod_metni])[0]
+            test_verisi["Shipping Mode"] = float(sayisal_deger)
+        except ValueError:
+            # Bilinmeyen bir değer gelirse median kullan
+            test_verisi["Shipping Mode"] = X_sablon["Shipping Mode"].values[0]
+    else:
+        # Değilse (olası değil ama güvenlik için), direkt yazmayı dene
+         test_verisi["Shipping Mode"] = float(veri.get("Shipping_Mode", 3.0))
+
+
+    # 3. RİSK HESAPLAMA MOTORU
+    def calculate_base_risk(df_input, w_desc):
+        # Dataframe'in tüm verilerini float'a çevirdiğimizden emin oluyoruz
+        df_numeric = df_input.astype(float)
+        
+        try:
+            olasiliklar = model.predict_proba(df_numeric)[0]
             risk = float(olasiliklar[1] * 100)
         except AttributeError:
-            tahmin = model.predict(saf_array)
+            tahmin = model.predict(df_numeric)
             risk = 85.0 if tahmin[0] == 1 else 15.0
 
         w_desc_low = w_desc.lower()
@@ -90,8 +103,10 @@ def risk_tahmin_et(veri: dict):
             risk = max(risk - 10.0, 2.0)
         return risk
 
-    current_risk = calculate_base_risk(secili_mod_degeri, order_city_val, category_id_val, veri.get("weather_desc", ""))
+    # Şu anki riski hesapla
+    current_risk = calculate_base_risk(test_verisi, veri.get("weather_desc", ""))
 
+    # 4. Lojistik Danışmanı (Tavsiye Motoru)
     all_modes = {
         "Ocean Freight (Ship)": "Standard Class",
         "Road Freight (Truck)": "Second Class",
@@ -103,8 +118,20 @@ def risk_tahmin_et(veri: dict):
 
     for display_name, mode_str in all_modes.items():
         if mode_str != gelen_mod_str:
-            alt_mode_val = float(mode_map.get(mode_str, 3.0))
-            alt_risk = calculate_base_risk(alt_mode_val, order_city_val, category_id_val, veri.get("weather_desc", ""))
+            alt_test = test_verisi.copy()
+            orijinal_alt_mod_metni = mode_map.get(mode_str, "Standard Class")
+            
+            # Alternatif modu da encoder ile dönüştür
+            if "Shipping Mode" in encoders:
+                try:
+                    sayisal_deger = encoders["Shipping Mode"].transform([orijinal_alt_mod_metni])[0]
+                    alt_test["Shipping Mode"] = float(sayisal_deger)
+                except ValueError:
+                    alt_test["Shipping Mode"] = X_sablon["Shipping Mode"].values[0]
+            else:
+                 alt_test["Shipping Mode"] = float(mode_map.get(mode_str, 3.0))
+
+            alt_risk = calculate_base_risk(alt_test, veri.get("weather_desc", ""))
             
             if alt_risk < best_alt_risk:
                 best_alt_risk = alt_risk
