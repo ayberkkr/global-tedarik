@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-import numpy as np # Balyoz kütüphanemiz
+import numpy as np
 
 app = FastAPI(title="Haci Global Visibility Hub API")
 
@@ -32,10 +32,10 @@ le = LabelEncoder()
 for col in kategorik_sutunlar:
     X_clean[col] = le.fit_transform(X_clean[col].astype(str))
 
-# ŞABLONU KESİN OLARAK FLOAT YAPIYORUZ
-X_sablon = X_clean.iloc[[0]].copy().astype(float)
+# Şablonu sadece değerleri (median) tutmak için bir sözlük olarak kaydediyoruz
+sablon_degerleri = {}
 for col in X_clean.columns:
-    X_sablon[col] = float(X_clean[col].median())
+    sablon_degerleri[col] = float(X_clean[col].median())
 
 @app.get("/")
 def home():
@@ -43,7 +43,8 @@ def home():
 
 @app.post("/tahmin_et")
 def risk_tahmin_et(veri: dict):
-    # 1. TERCÜMAN
+    
+    # 1. TERCÜMAN (İngilizce kelimeleri kesin rakamlara çevirir)
     mode_map = {
         "First Class": 0.0,
         "Same Day": 1.0,
@@ -51,28 +52,31 @@ def risk_tahmin_et(veri: dict):
         "Standard Class": 3.0
     }
     
-    # 2. VERİLERİ TOPLA VE GÜVENLİĞE AL
     gelen_mod_str = str(veri.get("Shipping_Mode", "Standard Class"))
+    
     if gelen_mod_str.isdigit():
-        shipping_mode_val = float(gelen_mod_str)
+        secili_mod_degeri = float(gelen_mod_str)
     else:
-        shipping_mode_val = float(mode_map.get(gelen_mod_str, 3.0))
+        secili_mod_degeri = float(mode_map.get(gelen_mod_str, 3.0))
 
-    order_city_val = float(veri.get("Order_City", X_sablon["Order City"].values[0]))
-    category_id_val = float(veri.get("Category_Id", X_sablon["Category Id"].values[0]))
+    order_city_val = float(veri.get("Order_City", sablon_degerleri["Order City"]))
+    category_id_val = float(veri.get("Category_Id", sablon_degerleri["Category Id"]))
 
-    # 3. RİSK HESAPLAMA MOTORU
+    # 2. RİSK HESAPLAMA MOTORU (Sıfırdan DataFrame yaratır)
     def calculate_base_risk(mode_val, city_val, cat_val, w_desc):
-        # Şablonu kopyala
-        df_input = X_sablon.copy()
         
-        # Sütunlara SADECE FLOAT bas
-        df_input["Shipping Mode"] = mode_val
-        df_input["Order City"] = city_val
-        df_input["Category Id"] = cat_val
+        # Orijinal sütun sırasına göre yepyeni, tertemiz bir sözlük oluşturuyoruz
+        yeni_veri = {}
+        for col in X_clean.columns:
+            yeni_veri[col] = [sablon_degerleri[col]] # Median değerleri varsayılan olarak koy
+            
+        # Kullanıcının seçtiği özellikleri üzerine yaz
+        yeni_veri["Shipping Mode"] = [float(mode_val)]
+        yeni_veri["Order City"] = [float(city_val)]
+        yeni_veri["Category Id"] = [float(cat_val)]
         
-        # CATBOOST İÇİN NİHAİ ZIRH: Tüm DataFrame'i numpy array'e ve float'a zorla
-        df_input = df_input.astype(float)
+        # Sıfırdan, saf matematik olan bir DataFrame oluştur
+        df_input = pd.DataFrame(yeni_veri)
 
         try:
             olasiliklar = model.predict_proba(df_input)[0]
@@ -91,9 +95,9 @@ def risk_tahmin_et(veri: dict):
         return risk
 
     # Şu anki riski hesapla
-    current_risk = calculate_base_risk(shipping_mode_val, order_city_val, category_id_val, veri.get("weather_desc", ""))
+    current_risk = calculate_base_risk(secili_mod_degeri, order_city_val, category_id_val, veri.get("weather_desc", ""))
 
-    # 4. Lojistik Danışmanı (Tavsiye Motoru)
+    # 3. Lojistik Danışmanı (Tavsiye Motoru)
     all_modes = {
         "Ocean Freight (Ship)": "Standard Class",
         "Road Freight (Truck)": "Second Class",
@@ -122,6 +126,6 @@ def risk_tahmin_et(veri: dict):
     }
 
     if best_alt_mode and (current_risk - best_alt_risk > 5.0):
-        response_data["Tavsiye"] = f"Using {best_alt_mode} reduces the risk to {round(best_alt_risk, 2)}%."
+        response_data["Tavsiye"] = f"💡 AI Tip: Using {best_alt_mode} reduces the risk to {round(best_alt_risk, 2)}%."
 
     return response_data
