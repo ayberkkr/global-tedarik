@@ -2,10 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 import warnings
 
-# Gereksiz uyarıları kapat
 warnings.filterwarnings('ignore')
 
 app = FastAPI(title="Haci Global Visibility Hub API")
@@ -18,9 +16,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. MODEL VE VERİYİ YÜKLE
+# 1. Modeli ve Şablonu Yükle
 model = joblib.load('haci_risk_model.joblib')
 
+# Saf ve sade bir şablon okuması yapıyoruz
 df_raw = pd.read_csv('DataCoSupplyChainDataset.csv', encoding='latin1')
 gereksiz_sutunlar = ['Customer Email', 'Customer Password', 'Customer Fname', 'Customer Lname', 'Product Image', 'Customer Street', 'Order Zipcode']
 hileli_sutunlar = ['Days for shipping (real)', 'Delivery Status']
@@ -32,12 +31,12 @@ kategorik_sutunlar = X_clean.select_dtypes(include=['object']).columns.tolist()
 X_clean[kategorik_sutunlar] = X_clean[kategorik_sutunlar].fillna("Unknown")
 X_clean = X_clean.fillna(0)
 
-# Tüm veriyi KESİN OLARAK sayıya (float) çevirip eğitiyoruz
+# Kategorik verileri sayısal hale getiriyoruz
+from sklearn.preprocessing import LabelEncoder
 for col in kategorik_sutunlar:
     le = LabelEncoder()
     X_clean[col] = le.fit_transform(X_clean[col].astype(str))
 
-# İlk satırı şablon olarak al ve tüm tipleri zorla Float yap
 X_sablon = X_clean.iloc[[0]].copy().astype(float)
 
 @app.get("/")
@@ -46,10 +45,11 @@ def home():
 
 @app.post("/tahmin_et")
 def risk_tahmin_et(veri: dict):
-    # Şablonumuzu al
+    # Şablonu al
     test_verisi = X_sablon.copy()
     
-    # 2. SEÇİMLERİ SAYI OLARAK ZORLA YAZ (Tercüman yok, direkt eşleştirme)
+    # 2. SEÇİMLERİ SAYI OLARAK ZORLA YAZ 
+    # Frontend'den ne gelirse gelsin, biz buraya SAF MATEMATİK yazıyoruz
     mode_map = {
         "First Class": 0.0,
         "Same Day": 1.0,
@@ -58,16 +58,24 @@ def risk_tahmin_et(veri: dict):
     }
     
     gelen_mod = str(veri.get("Shipping_Mode", "Standard Class"))
-    mode_val = float(gelen_mod) if gelen_mod.isdigit() else float(mode_map.get(gelen_mod, 3.0))
+    
+    # EĞER SAYIYSA SAYIYI AL, KELİMEYSE SÖZLÜKTEN SAYISINI BUL
+    if gelen_mod.replace('.', '', 1).isdigit(): 
+        mode_val = float(gelen_mod)
+    else:
+        mode_val = mode_map.get(gelen_mod, 3.0)
 
-    # Gelen 3 veriyi şablona yerleştir
-    test_verisi["Shipping Mode"] = mode_val
+    # Değerleri ZORLA float olarak ata
+    test_verisi["Shipping Mode"] = float(mode_val)
     test_verisi["Order City"] = float(veri.get("Order_City", test_verisi["Order City"].values[0]))
     test_verisi["Category Id"] = float(veri.get("Category_Id", test_verisi["Category Id"].values[0]))
 
+    # Tüm dataframe'i tekrar float'a zorluyoruz
+    test_verisi = test_verisi.astype(float)
+
     w_desc = veri.get("weather_desc", "").lower()
     
-    # 3. DÜZ TAHMİN (Hiçbir atraksiyon yok)
+    # 3. TAHMİN
     try:
         olasiliklar = model.predict_proba(test_verisi)[0]
         risk = float(olasiliklar[1] * 100)
@@ -89,5 +97,5 @@ def risk_tahmin_et(veri: dict):
     return {
         "risk_skoru": round(risk, 2),
         "Tahmin Sonucu": risk_metni,
-        "Tavsiye": ""  # Tavsiye kutusunu boş bıraktık, hata yaratmasın
+        "Tavsiye": "" 
     }
