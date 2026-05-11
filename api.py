@@ -43,7 +43,18 @@ def home():
 def risk_tahmin_et(veri: dict):
     test_verisi = X_sablon.copy()
     
-    # 💡 İŞTE BURASI: Kelimeleri modelin anladığı sayılara çeviren TERCÜMAN
+    # 1. Önce genel eşleştirmeleri yap
+    sutun_eslesmeleri = {
+        "Order_City": "Order City", 
+        "Category_Id": "Category Id",
+        "Shipping_Mode": "Shipping Mode"
+    }
+    
+    for frontend_key, dataset_key in sutun_eslesmeleri.items():
+        if frontend_key in veri and dataset_key in test_verisi.columns:
+            test_verisi[dataset_key] = veri[frontend_key]
+
+    # 2. 💡 ZIRHLI TERCÜMAN (Eski veriyi ezip kesinlikle sayıya çevirir)
     mode_map = {
         "First Class": 0,
         "Same Day": 1,
@@ -51,19 +62,15 @@ def risk_tahmin_et(veri: dict):
         "Standard Class": 3
     }
     
-    # Gelen İngilizce kelimeyi alıp sayıya çeviriyoruz ve modele öyle veriyoruz
-    gelen_mod_str = veri.get("Shipping_Mode", "Standard Class")
-    test_verisi["Shipping Mode"] = mode_map.get(gelen_mod_str, 3)
+    gelen_mod_str = str(veri.get("Shipping_Mode", "Standard Class"))
     
-    sutun_eslesmeleri = {
-        "Order_City": "Order City", 
-        "Category_Id": "Category Id"
-    }
-    
-    for frontend_key, dataset_key in sutun_eslesmeleri.items():
-        if frontend_key in veri and dataset_key in test_verisi.columns:
-            test_verisi[dataset_key] = veri[frontend_key]
+    # Eğer sistemden numara gelirse onu kullan, kelime gelirse sayıya çevir
+    if gelen_mod_str.isdigit():
+        test_verisi["Shipping Mode"] = int(gelen_mod_str)
+    else:
+        test_verisi["Shipping Mode"] = mode_map.get(gelen_mod_str, 3)
 
+    # 3. Riski Hesapla
     def calculate_base_risk(df_input, w_desc):
         try:
             olasiliklar = model.predict_proba(df_input)[0]
@@ -81,10 +88,9 @@ def risk_tahmin_et(veri: dict):
             risk = max(risk - 10.0, 2.0)
         return risk
 
-    # Seçili modun riskini hesapla
     current_risk = calculate_base_risk(test_verisi, veri.get("weather_desc", ""))
 
-    # Lojistik Danışmanı: Diğer taşıma modlarını gizlice test et
+    # 4. Lojistik Danışmanı (Tavsiye Motoru)
     all_modes = {
         "Ocean Freight (Ship)": "Standard Class",
         "Road Freight (Truck)": "Second Class",
@@ -97,7 +103,7 @@ def risk_tahmin_et(veri: dict):
     for display_name, mode_str in all_modes.items():
         if mode_str != gelen_mod_str:
             alt_test = test_verisi.copy()
-            alt_test["Shipping Mode"] = mode_map.get(mode_str, 3) # Test ederken de sayıya çevir
+            alt_test["Shipping Mode"] = mode_map.get(mode_str, 3) # Testte de sayı kullanıyoruz
             alt_risk = calculate_base_risk(alt_test, veri.get("weather_desc", ""))
             
             if alt_risk < best_alt_risk:
