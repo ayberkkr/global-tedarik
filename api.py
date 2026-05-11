@@ -33,7 +33,7 @@ for col in kategorik_sutunlar:
 
 X_sablon = X_clean.iloc[[0]].copy()
 for col in X_clean.columns:
-    X_sablon[col] = X_clean[col].median()
+    X_sablon[col] = float(X_clean[col].median()) # Tüm veriler KESİNLİKLE float
 
 @app.get("/")
 def home():
@@ -43,40 +43,41 @@ def home():
 def risk_tahmin_et(veri: dict):
     test_verisi = X_sablon.copy()
     
-    # 1. Önce genel eşleştirmeleri yap
+    # 1. GÜVENLİ EŞLEŞTİRME (Shipping_Mode BURADAN ÇIKARILDI)
     sutun_eslesmeleri = {
         "Order_City": "Order City", 
-        "Category_Id": "Category Id",
-        "Shipping_Mode": "Shipping Mode"
+        "Category_Id": "Category Id"
     }
     
     for frontend_key, dataset_key in sutun_eslesmeleri.items():
         if frontend_key in veri and dataset_key in test_verisi.columns:
-            test_verisi[dataset_key] = veri[frontend_key]
+            test_verisi[dataset_key] = float(veri[frontend_key]) # Ne gelirse gelsin float yap
 
-    # 2. 💡 ZIRHLI TERCÜMAN (Eski veriyi ezip kesinlikle sayıya çevirir)
+    # 2. TERCÜMAN (Doğrudan float olarak işler)
     mode_map = {
-        "First Class": 0,
-        "Same Day": 1,
-        "Second Class": 2,
-        "Standard Class": 3
+        "First Class": 0.0,
+        "Same Day": 1.0,
+        "Second Class": 2.0,
+        "Standard Class": 3.0
     }
     
     gelen_mod_str = str(veri.get("Shipping_Mode", "Standard Class"))
     
-    # Eğer sistemden numara gelirse onu kullan, kelime gelirse sayıya çevir
     if gelen_mod_str.isdigit():
-        test_verisi["Shipping Mode"] = int(gelen_mod_str)
+        test_verisi["Shipping Mode"] = float(gelen_mod_str)
     else:
-        test_verisi["Shipping Mode"] = mode_map.get(gelen_mod_str, 3)
+        test_verisi["Shipping Mode"] = float(mode_map.get(gelen_mod_str, 3.0))
 
     # 3. Riski Hesapla
     def calculate_base_risk(df_input, w_desc):
+        # CatBoost'a girmeden saniyeler önce ÇELİK YELEK giydiriyoruz
+        df_numeric = df_input.astype(float) 
+        
         try:
-            olasiliklar = model.predict_proba(df_input)[0]
+            olasiliklar = model.predict_proba(df_numeric)[0]
             risk = float(olasiliklar[1] * 100)
         except AttributeError:
-            tahmin = model.predict(df_input)
+            tahmin = model.predict(df_numeric)
             risk = 85.0 if tahmin[0] == 1 else 15.0
 
         w_desc_low = w_desc.lower()
@@ -103,7 +104,7 @@ def risk_tahmin_et(veri: dict):
     for display_name, mode_str in all_modes.items():
         if mode_str != gelen_mod_str:
             alt_test = test_verisi.copy()
-            alt_test["Shipping Mode"] = mode_map.get(mode_str, 3) # Testte de sayı kullanıyoruz
+            alt_test["Shipping Mode"] = float(mode_map.get(mode_str, 3.0))
             alt_risk = calculate_base_risk(alt_test, veri.get("weather_desc", ""))
             
             if alt_risk < best_alt_risk:
