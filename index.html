@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hacı Global Visibility Hub</title>
+    <title>Haci Global Visibility Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -16,7 +16,7 @@
         #map { height: 100%; width: 100%; border-radius: 0.75rem; background-color: #0b1121; outline: none; }
         .neon-glow { filter: drop-shadow(0 0 2px #10b981) drop-shadow(0 0 5px #10b981); }
         
-        /* CANLI RADAR/PİNG EFEKTİ */
+        /* CANLI RADAR/PING EFEKTI */
         .radar-marker {
             position: relative; width: 15px; height: 15px; background-color: #10b981;
             border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px #10b981;
@@ -43,7 +43,7 @@
 
     <aside class="w-80 bg-[#0f172a] border-r border-gray-800 flex flex-col z-50">
         <div class="p-6">
-            <h1 class="text-4xl font-extrabold text-white mb-10">Hacı<span class="text-accent">.</span></h1>
+            <h1 class="text-4xl font-extrabold text-white mb-10">Haci<span class="text-accent">.</span></h1>
             <nav class="space-y-4" id="sidebarMenu">
                 <a href="#" onclick="switchView('dashboardView', this)" class="menu-item active-menu flex items-center py-3 px-6 rounded-xl text-lg font-bold transition text-gray-400 hover:text-white hover:bg-gray-800">
                     <span class="mr-3">📊</span> Dashboard
@@ -57,38 +57,43 @@
             </nav>
         </div>
         
-        <div class="mt-auto p-6 bg-gray-900 border-t border-gray-800">
-            <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center"><span class="mr-2">🤖</span> AI Risk Analizi</h3>
+        <div class="mt-auto p-6 bg-gray-900 border-t border-gray-800 overflow-y-auto max-h-[60vh]">
+            <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center"><span class="mr-2">🤖</span> AI Risk Analysis</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Rota Seçimi</label>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Route Selection</label>
                     <div class="grid grid-cols-2 gap-2 mt-1">
                         <select id="sourceLoc" class="bg-gray-800 text-white p-2 rounded border border-gray-700 text-xs outline-none"></select>
                         <select id="targetLoc" class="bg-gray-800 text-white p-2 rounded border border-gray-700 text-xs outline-none"></select>
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Ürün Kategorisi</label>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Product Category</label>
                     <select id="productCat" class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 text-sm outline-none mt-1">
-                        <option value="73">💻 Elektronik</option>
-                        <option value="17">⚽ Spor Malzemeleri</option>
-                        <option value="29">👕 Giyim / Moda</option>
-                        <option value="48">🧸 Oyuncak</option>
-                        <option value="12">🍎 Gıda / İçecek</option>
+                        <option value="73">💻 Electronics</option>
+                        <option value="17">⚽ Sporting Goods</option>
+                        <option value="29">👕 Apparel / Fashion</option>
+                        <option value="48">🧸 Toys</option>
+                        <option value="12">🍎 Food & Beverage</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Taşıma Modu</label>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Transportation Mode</label>
                     <select id="shipMode" class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 text-sm outline-none mt-1">
-                        <option value="0">Standard Class</option>
-                        <option value="1">First Class (Hızlı)</option>
-                        <option value="2">Second Class</option>
-                        <option value="3">Same Day (Aynı Gün)</option>
+                        <option value="Standard Class">🚢 Ocean Freight (Ship)</option>
+                        <option value="Second Class">🚛 Road Freight (Truck)</option>
+                        <option value="Same Day">✈️ Air Freight (Plane)</option>
                     </select>
                 </div>
                 <button onclick="riskiHesapla()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-4 rounded-xl text-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] transition">
-                    ROTA RİSKİNİ HESAPLA
+                    CALCULATE ROUTE RISK
                 </button>
+                
+                <div id="aiSuggestionBox" class="hidden mt-2 p-3 bg-emerald-900/40 border border-emerald-500/50 rounded-lg text-left">
+                    <span class="text-emerald-400 font-bold text-xs uppercase block mb-1">💡 AI Recommendation</span>
+                    <span id="suggestionText" class="text-sm text-gray-300"></span>
+                </div>
+
                 <div id="sonucEkrani" class="mt-4 p-4 rounded-xl text-center hidden flex flex-col justify-center items-center border-2"></div>
             </div>
         </div>
@@ -100,9 +105,9 @@
             <header class="flex justify-between items-center mb-8">
                 <div>
                     <h2 class="text-4xl font-black text-white tracking-tight">Global Visibility Hub</h2>
-                    <p class="text-gray-400 text-lg">AI Destekli Rota Planlama ve Gerçek Zamanlı Hava Durumu</p>
+                    <p class="text-gray-400 text-lg">AI-Powered Route Planning & Real-Time Weather Data</p>
                 </div>
-                <button onclick="map.setView([20, 10], 2)" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-bold transition">Uzaklaş (Reset Map)</button>
+                <button onclick="map.setView([20, 10], 2)" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-bold transition">Reset Map</button>
             </header>
 
             <div class="grid grid-cols-3 gap-8 mb-8 flex-1">
@@ -133,7 +138,7 @@
         <div id="shipmentsView" class="view-section hidden-view flex-1">
             <header class="mb-8">
                 <h2 class="text-4xl font-black text-white tracking-tight">Live Shipments</h2>
-                <p class="text-gray-400 text-lg">Aktif sevkiyatların listesi ve yapay zeka risk analizleri</p>
+                <p class="text-gray-400 text-lg">Active shipments list and AI risk assessments</p>
             </header>
             
             <div class="bg-panel rounded-2xl p-8 shadow-xl">
@@ -163,15 +168,15 @@
         <div id="riskCenterView" class="view-section hidden-view flex-1">
             <header class="mb-8">
                 <h2 class="text-4xl font-black text-white tracking-tight">Risk Center</h2>
-                <p class="text-gray-400 text-lg">Sistemdeki genel risk yoğunlukları ve model analizleri</p>
+                <p class="text-gray-400 text-lg">Overall risk density and model analysis</p>
             </header>
             <div class="grid grid-cols-2 gap-8">
                 <div class="bg-panel rounded-2xl p-8 shadow-xl border border-gray-800">
-                    <h3 class="text-white font-bold mb-4">Taşıma Moduna Göre Risk Dağılımı</h3>
+                    <h3 class="text-white font-bold mb-4">Risk Distribution by Transport Mode</h3>
                     <canvas id="riskChart1"></canvas>
                 </div>
                 <div class="bg-panel rounded-2xl p-8 shadow-xl border border-gray-800">
-                    <h3 class="text-white font-bold mb-4">Aylık Gecikme Trendi</h3>
+                    <h3 class="text-white font-bold mb-4">Monthly Delay Trend</h3>
                     <canvas id="riskChart2"></canvas>
                 </div>
             </div>
@@ -180,6 +185,7 @@
     </main>
 
     <script>
+        // API KEY (GUVENLIK BYPASS)
         const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
         let isChartInitialized = false;
         let activeRouteLine = null;
@@ -216,20 +222,20 @@
                 }).addTo(map);
             });
 
-        // --- DEV LİMANLAR AĞI ---
+        // --- DEV LİMANLAR AĞI (İngilizceye Çevrildi) ---
         const locations = [
-            { id: "CNSHA", cityId: 450, name: "Shanghai Port, Çin", coords: [31.23, 121.47], type: "Mega Liman", weatherDesc: "" },
-            { id: "SGSIN", cityId: 451, name: "Singapore Port", coords: [1.29, 103.85], type: "Mega Liman", weatherDesc: "" },
-            { id: "NLRTM", cityId: 452, name: "Rotterdam, Hollanda", coords: [51.92, 4.47], type: "Avrupa Ana Hub", weatherDesc: "" },
-            { id: "USLAX", cityId: 453, name: "Los Angeles, ABD", coords: [33.77, -118.19], type: "Mega Liman", weatherDesc: "" },
-            { id: "AEJEA", cityId: 454, name: "Jebel Ali, BAE", coords: [24.98, 55.06], type: "Orta Doğu Hub", weatherDesc: "" },
-            { id: "DEHAM", cityId: 455, name: "Hamburg, Almanya", coords: [53.55, 9.99], type: "Liman", weatherDesc: "" },
-            { id: "KRPUS", cityId: 456, name: "Busan, Güney Kore", coords: [35.17, 129.07], type: "Liman", weatherDesc: "" },
-            { id: "EGSUZ", cityId: 457, name: "Süveyş Kanalı", coords: [30.58, 32.26], type: "Kritik Geçiş", weatherDesc: "" },
-            { id: "PAPAN", cityId: 458, name: "Panama Kanalı", coords: [9.14, -79.73], type: "Kritik Geçiş", weatherDesc: "" },
-            { id: "TRIST", cityId: 459, name: "Ambarlı Limanı, İstanbul", coords: [40.97, 28.68], type: "Ana Liman", weatherDesc: "" },
-            { id: "TRBUR", cityId: 460, name: "Bursa (BTÜ Lojistik Hub)", coords: [40.18, 29.06], type: "Bölgesel Merkez", weatherDesc: "" },
-            { id: "GBHOU", cityId: 461, name: "Houston, ABD", coords: [29.76, -95.36], type: "Liman", weatherDesc: "" }
+            { id: "CNSHA", cityId: 450, name: "Shanghai Port, CN", coords: [31.23, 121.47], type: "Mega Port", weatherDesc: "" },
+            { id: "SGSIN", cityId: 451, name: "Singapore Port, SG", coords: [1.29, 103.85], type: "Mega Port", weatherDesc: "" },
+            { id: "NLRTM", cityId: 452, name: "Rotterdam, NL", coords: [51.92, 4.47], type: "Europe Hub", weatherDesc: "" },
+            { id: "USLAX", cityId: 453, name: "Los Angeles, US", coords: [33.77, -118.19], type: "Mega Port", weatherDesc: "" },
+            { id: "AEJEA", cityId: 454, name: "Jebel Ali, AE", coords: [24.98, 55.06], type: "Middle East Hub", weatherDesc: "" },
+            { id: "DEHAM", cityId: 455, name: "Hamburg, DE", coords: [53.55, 9.99], type: "Port", weatherDesc: "" },
+            { id: "KRPUS", cityId: 456, name: "Busan, KR", coords: [35.17, 129.07], type: "Port", weatherDesc: "" },
+            { id: "EGSUZ", cityId: 457, name: "Suez Canal, EG", coords: [30.58, 32.26], type: "Critical Transit", weatherDesc: "" },
+            { id: "PAPAN", cityId: 458, name: "Panama Canal, PA", coords: [9.14, -79.73], type: "Critical Transit", weatherDesc: "" },
+            { id: "TRIST", cityId: 459, name: "Ambarli, TR", coords: [40.97, 28.68], type: "Main Port", weatherDesc: "" },
+            { id: "TRBUR", cityId: 460, name: "Bursa (BTU Hub), TR", coords: [40.18, 29.06], type: "Regional Center", weatherDesc: "" },
+            { id: "GBHOU", cityId: 461, name: "Houston, US", coords: [29.76, -95.36], type: "Port", weatherDesc: "" }
         ];
 
         const sourceSelect = document.getElementById('sourceLoc');
@@ -248,10 +254,11 @@
 
         locations.forEach(loc => {
             const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-            marker.bindTooltip(`Yükleniyor...`, { direction: 'top', className: 'custom-tooltip' });
+            marker.bindTooltip(`Loading...`, { direction: 'top', className: 'custom-tooltip' });
             marker.on('click', () => map.flyTo(loc.coords, 6, { animate: true, duration: 1.5 }));
 
-            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${loc.coords[0]}&lon=${loc.coords[1]}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=tr`;
+            // Hava durumu çekilirken dil (lang=en) yapıldı
+            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${loc.coords[0]}&lon=${loc.coords[1]}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=en`;
             fetch(weatherUrl).then(response => response.json()).then(w => {
                 const temp = Math.round(w.main.temp);
                 const desc = w.weather[0].description.toUpperCase();
@@ -273,9 +280,12 @@
         // --- YAPAY ZEKA BAĞLANTISI VE DİNAMİK TABLO ---
         async function riskiHesapla() {
             const sc = document.getElementById('sonucEkrani');
+            const sugBox = document.getElementById('aiSuggestionBox');
+            
+            sugBox.classList.add('hidden'); // Yeni hesaplamada tavsiyeyi gizle
             sc.classList.remove('hidden');
             sc.className = "mt-4 p-4 rounded-xl text-center border-2 bg-gray-800 border-gray-600 text-yellow-500";
-            sc.innerHTML = "<span class='font-bold'>Yapay Zeka Analiz Ediyor...</span>";
+            sc.innerHTML = "<span class='font-bold'>Analyzing...</span>";
 
             const sourceId = document.getElementById('sourceLoc').value;
             const targetId = document.getElementById('targetLoc').value;
@@ -283,7 +293,7 @@
             const productCat = document.getElementById('productCat').value;
 
             if (sourceId === targetId) {
-                sc.innerHTML = "<span class='font-bold text-red-500'>Hata: Çıkış ve Varış noktaları aynı olamaz!</span>";
+                sc.innerHTML = "<span class='font-bold text-red-500'>Error: Origin and Destination cannot be the same!</span>";
                 return;
             }
 
@@ -291,11 +301,12 @@
             const target = locations.find(l => l.id === targetId);
 
             try {
-                const response = await fetch('https://global-risk.onrender.com/tahmin_et', {
+                // RENDER LİNKİN (Bu satırı kendi linkinle değiştirmeyi unutma, format aynıysa kalsın)
+                const response = await fetch('https://haci-risk-api.onrender.com/tahmin_et', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        "Shipping_Mode": parseFloat(shipMode), 
+                        "Shipping_Mode": shipMode, // Artik String olarak gidiyor (Standard Class vb.)
                         "Order_City": target.cityId, 
                         "Category_Id": parseFloat(productCat),
                         "weather_desc": target.weatherDesc 
@@ -319,23 +330,29 @@
                 sc.innerHTML = `
                     <div class="text-4xl font-black">${skor}%</div>
                     <div class="text-sm font-bold uppercase mt-1">${data["Tahmin Sonucu"]}</div>
-                    <div class="text-xs mt-2 text-gray-300">Hedef Hava Durumu: ${target.weatherDesc || 'Bilinmiyor'}</div>
+                    <div class="text-xs mt-2 text-gray-300">Target Weather: ${target.weatherDesc || 'Unknown'}</div>
                 `;
 
-                // 3. Sağ Üstteki Critical Risks Alanını Güncelle (Eğer risk > 60 ise)
+                // 2.5 YAPAY ZEKA TAVSİYESİ (Lojistik Danışmanı)
+                if (data.Tavsiye && data.Tavsiye !== "") {
+                    document.getElementById('suggestionText').innerText = data.Tavsiye;
+                    sugBox.classList.remove('hidden');
+                }
+
+                // 3. Sağ Üstteki Critical Risks Alanını Güncelle
                 if(skor > 60) {
                     const criticalContainer = document.getElementById('criticalRisksContainer');
                     criticalContainer.innerHTML = `
                         <div class="bg-red-950/50 border border-red-800 p-4 rounded-xl flex justify-between items-center transition-all">
-                            <span class="font-bold text-sm">Yüksek Risk Algılandı: ${target.name.split(',')[0]} Rotaları</span>
+                            <span class="font-bold text-sm">High Risk: ${target.name.split(',')[0]} Routes</span>
                             <span class="text-xs bg-red-600 px-3 py-1 rounded-full text-white font-black">CRITICAL</span>
                         </div>
                     `;
                 }
 
-                // 4. "LİVE SHIPMENTS" TABLOSUNA ANINDA VERİ EKLEME MUCİZESİ
+                // 4. "LIVE SHIPMENTS" TABLOSUNA ANINDA VERİ EKLE
                 const tbody = document.getElementById('liveShipmentsBody');
-                const trackingId = 'HACI-' + Math.floor(Math.random() * 9000 + 1000); // Rastgele ID üret
+                const trackingId = 'HACI-' + Math.floor(Math.random() * 9000 + 1000); 
                 
                 const statusHtml = skor > 60
                     ? '<span class="bg-red-900/40 text-red-400 px-4 py-1 rounded-full text-sm font-bold border border-red-800">Delayed</span>'
@@ -343,22 +360,23 @@
                     ? '<span class="bg-orange-900/40 text-orange-400 px-4 py-1 rounded-full text-sm font-bold border border-orange-800">Warning</span>'
                     : '<span class="bg-emerald-900/40 text-emerald-400 px-4 py-1 rounded-full text-sm font-bold border border-emerald-800">In Transit</span>';
 
+                let vName = shipMode === "Standard Class" ? "🚢" : shipMode === "Second Class" ? "🚛" : "✈️";
+
                 const newRow = `
                     <tr class="border-b border-gray-800/50 bg-gray-800/30 transition-all duration-500">
                         <td class="py-5 font-bold text-white">${trackingId}</td>
-                        <td class="text-center">🚢 ${source.name.split(',')[0].split(' ')[0]} Express</td>
+                        <td class="text-center">${vName} ${source.name.split(',')[0].split(' ')[0]} Express</td>
                         <td>${source.name.split(',')[0]} ➔ ${target.name.split(',')[0]}</td>
                         <td class="text-center">${statusHtml}</td>
                         <td class="text-right font-mono font-bold ${skor > 60 ? 'text-red-500' : skor > 35 ? 'text-orange-500' : 'text-emerald-500'}">${skor.toFixed(2)}% Risk</td>
                     </tr>
                 `;
                 
-                // Yeni veriyi tablonun EN ÜSTÜNE ekler
                 tbody.insertAdjacentHTML('afterbegin', newRow);
 
             } catch (error) {
                 sc.className = "mt-4 p-4 rounded-xl text-center border-2 bg-red-900 border-red-600 text-white font-bold";
-                sc.innerHTML = "HATA: Python Sunucusu Kapalı!";
+                sc.innerHTML = "ERROR: AI Server Offline!";
             }
         }
 
@@ -367,7 +385,7 @@
             new Chart(document.getElementById('riskChart1').getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Zamanında Teslimat', 'Gecikme', 'Kritik Risk'],
+                    labels: ['On-time Delivery', 'Delay', 'Critical Risk'],
                     datasets: [{ data: [65, 25, 10], backgroundColor: ['#10b981', '#f59e0b', '#dc2626'], borderWidth: 0 }]
                 },
                 options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#e2e8f0' } } } }
@@ -376,8 +394,8 @@
             new Chart(document.getElementById('riskChart2').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May'],
-                    datasets: [{ label: 'Riskli Sevkiyat Sayısı', data: [120, 190, 80, 150, 90], backgroundColor: '#3b82f6', borderRadius: 4 }]
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                    datasets: [{ label: 'Risky Shipments', data: [120, 190, 80, 150, 90], backgroundColor: '#3b82f6', borderRadius: 4 }]
                 },
                 options: { responsive: true, scales: { y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } }, x: { grid: { display: false }, ticks: { color: '#9ca3af' } } }, plugins: { legend: { display: false } } }
             });
