@@ -32,10 +32,9 @@ le = LabelEncoder()
 for col in kategorik_sutunlar:
     X_clean[col] = le.fit_transform(X_clean[col].astype(str))
 
-# Şablonu sadece değerleri (median) tutmak için bir sözlük olarak kaydediyoruz
-sablon_degerleri = {}
-for col in X_clean.columns:
-    sablon_degerleri[col] = float(X_clean[col].median())
+# Şablon Değerlerini ve En Önemlisi SÜTUN SIRASINI Kaydediyoruz
+sutun_sirasi = list(X_clean.columns)
+sablon_degerleri = {col: float(X_clean[col].median()) for col in sutun_sirasi}
 
 @app.get("/")
 def home():
@@ -44,7 +43,7 @@ def home():
 @app.post("/tahmin_et")
 def risk_tahmin_et(veri: dict):
     
-    # 1. TERCÜMAN (İngilizce kelimeleri kesin rakamlara çevirir)
+    # 1. TERCÜMAN
     mode_map = {
         "First Class": 0.0,
         "Same Day": 1.0,
@@ -53,36 +52,33 @@ def risk_tahmin_et(veri: dict):
     }
     
     gelen_mod_str = str(veri.get("Shipping_Mode", "Standard Class"))
-    
-    if gelen_mod_str.isdigit():
-        secili_mod_degeri = float(gelen_mod_str)
-    else:
-        secili_mod_degeri = float(mode_map.get(gelen_mod_str, 3.0))
+    secili_mod_degeri = float(gelen_mod_str) if gelen_mod_str.isdigit() else float(mode_map.get(gelen_mod_str, 3.0))
 
     order_city_val = float(veri.get("Order_City", sablon_degerleri["Order City"]))
     category_id_val = float(veri.get("Category_Id", sablon_degerleri["Category Id"]))
 
-    # 2. RİSK HESAPLAMA MOTORU (Sıfırdan DataFrame yaratır)
+    # 2. RİSK HESAPLAMA MOTORU (Numpy Balyozu)
     def calculate_base_risk(mode_val, city_val, cat_val, w_desc):
+        # Önce değerleri sözlüğe yaz
+        anlik_degerler = sablon_degerleri.copy()
+        anlik_degerler["Shipping Mode"] = mode_val
+        anlik_degerler["Order City"] = city_val
+        anlik_degerler["Category Id"] = cat_val
         
-        # Orijinal sütun sırasına göre yepyeni, tertemiz bir sözlük oluşturuyoruz
-        yeni_veri = {}
-        for col in X_clean.columns:
-            yeni_veri[col] = [sablon_degerleri[col]] # Median değerleri varsayılan olarak koy
+        # Sütun sırasını BOZMADAN sadece değerleri bir listeye (array) diziyoruz!
+        sadece_sayilar = []
+        for col in sutun_sirasi:
+            sadece_sayilar.append(anlik_degerler[col])
             
-        # Kullanıcının seçtiği özellikleri üzerine yaz
-        yeni_veri["Shipping Mode"] = [float(mode_val)]
-        yeni_veri["Order City"] = [float(city_val)]
-        yeni_veri["Category Id"] = [float(cat_val)]
-        
-        # Sıfırdan, saf matematik olan bir DataFrame oluştur
-        df_input = pd.DataFrame(yeni_veri)
+        # CatBoost'a Pandas DataFrame yerine, 2 boyutlu çıplak bir SAYI DİZİSİ yolluyoruz.
+        # Böylece "Hani nerede Shipping Mode?" diye soramayacak!
+        saf_array = np.array([sadece_sayilar], dtype=float)
 
         try:
-            olasiliklar = model.predict_proba(df_input)[0]
+            olasiliklar = model.predict_proba(saf_array)[0]
             risk = float(olasiliklar[1] * 100)
         except AttributeError:
-            tahmin = model.predict(df_input)
+            tahmin = model.predict(saf_array)
             risk = 85.0 if tahmin[0] == 1 else 15.0
 
         w_desc_low = w_desc.lower()
@@ -94,10 +90,8 @@ def risk_tahmin_et(veri: dict):
             risk = max(risk - 10.0, 2.0)
         return risk
 
-    # Şu anki riski hesapla
     current_risk = calculate_base_risk(secili_mod_degeri, order_city_val, category_id_val, veri.get("weather_desc", ""))
 
-    # 3. Lojistik Danışmanı (Tavsiye Motoru)
     all_modes = {
         "Ocean Freight (Ship)": "Standard Class",
         "Road Freight (Truck)": "Second Class",
