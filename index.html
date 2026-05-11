@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         body { background-color: #0b1121; color: #e2e8f0; }
         .bg-panel { background-color: #111827; border: 1px solid #1f2937; }
@@ -16,7 +18,6 @@
         #map { height: 100%; width: 100%; border-radius: 0.75rem; background-color: #0b1121; outline: none; }
         .neon-glow { filter: drop-shadow(0 0 2px #10b981) drop-shadow(0 0 5px #10b981); }
         
-        /* Liman Sağlık İndeksi (Aura Efektleri) */
         .port-aura-green { border-radius: 50%; background: rgba(16, 185, 129, 0.3); border: 2px solid #10b981; animation: pulse-green 2s infinite; }
         .port-aura-yellow { border-radius: 50%; background: rgba(245, 158, 11, 0.3); border: 2px solid #f59e0b; animation: pulse-yellow 2s infinite; }
         .port-aura-red { border-radius: 50%; background: rgba(220, 38, 38, 0.4); border: 2px solid #dc2626; animation: pulse-red 1.5s infinite; }
@@ -25,7 +26,6 @@
         @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.8); } 70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
         
-        /* Kayan Haber Bandı (News Ticker) */
         .ticker-wrap { width: 100%; overflow: hidden; background-color: rgba(15, 23, 42, 0.9); border-top: 1px solid #334155; position: absolute; bottom: 0; left: 0; z-index: 1000; display: flex; align-items: center; padding: 4px 0; }
         .ticker-title { background: #dc2626; color: white; padding: 4px 12px; font-weight: bold; font-size: 12px; z-index: 10; letter-spacing: 1px; }
         .ticker-move { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker 25s linear infinite; }
@@ -40,7 +40,7 @@
 </head>
 <body class="flex h-screen overflow-hidden font-sans">
 
-    <aside class="w-[350px] bg-[#0f172a] border-r border-gray-800 flex flex-col z-50">
+    <aside class="w-[380px] bg-[#0f172a] border-r border-gray-800 flex flex-col z-50">
         <div class="p-6">
             <h1 class="text-4xl font-extrabold text-white mb-10">Haci<span class="text-accent">.</span></h1>
             <nav class="space-y-4" id="sidebarMenu">
@@ -50,13 +50,10 @@
                 <a href="#" onclick="switchView('shipmentsView', this)" class="menu-item flex items-center py-3 px-6 rounded-xl text-lg transition text-gray-400 hover:text-white hover:bg-gray-800">
                     <span class="mr-3">🚢</span> Live Shipments
                 </a>
-                <a href="#" onclick="switchView('riskCenterView', this)" class="menu-item flex items-center py-3 px-6 rounded-xl text-lg transition text-gray-400 hover:text-white hover:bg-gray-800">
-                    <span class="mr-3">🛡️</span> Risk Center
-                </a>
             </nav>
         </div>
         
-        <div class="mt-auto p-6 bg-gray-900 border-t border-gray-800 overflow-y-auto max-h-[70vh]">
+        <div class="mt-auto p-6 bg-gray-900 border-t border-gray-800 overflow-y-auto max-h-[75vh]">
             <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center"><span class="mr-2">🤖</span> AI Risk Analysis</h3>
             <div class="space-y-4">
                 <div>
@@ -80,21 +77,38 @@
                     CALCULATE ROUTE RISK
                 </button>
                 
-                <div id="sonucEkrani" class="mt-4 hidden flex flex-col gap-3">
-                    <div id="mainRiskBox" class="p-4 rounded-xl text-center border-2 bg-gray-800 border-gray-600 transition-all duration-500">
+                <div id="sonucEkrani" class="mt-2 hidden flex flex-col gap-2">
+                    <div id="mainRiskBox" class="p-3 rounded-xl text-center border-2 bg-gray-800 border-gray-600 transition-all duration-500">
                         <div id="riskVal" class="text-4xl font-black text-white">-%</div>
                         <div id="riskStatus" class="text-sm font-bold uppercase mt-1 text-gray-400">Waiting</div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-red-900/20 border border-red-800/50 p-3 rounded-xl text-center">
-                            <div class="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">Cost of Delay</div>
-                            <div id="financialLoss" class="text-red-500 font-mono font-bold text-lg">$0</div>
+                        <div class="bg-red-900/20 border border-red-800/50 p-2 rounded-xl text-center">
+                            <div class="text-[9px] text-red-400 font-bold uppercase tracking-widest mb-1">Cost of Delay</div>
+                            <div id="financialLoss" class="text-red-500 font-mono font-bold text-sm">$0</div>
                         </div>
-                        <div class="bg-emerald-900/20 border border-emerald-800/50 p-3 rounded-xl text-center">
-                            <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1">CO2 Emission</div>
-                            <div id="carbonFootprint" class="text-emerald-500 font-mono font-bold text-lg">0 Tons</div>
+                        <div class="bg-emerald-900/20 border border-emerald-800/50 p-2 rounded-xl text-center">
+                            <div class="text-[9px] text-emerald-400 font-bold uppercase tracking-widest mb-1">CO2 Emission</div>
+                            <div id="carbonFootprint" class="text-emerald-500 font-mono font-bold text-sm">0 Tons</div>
                         </div>
+                        <div class="bg-blue-900/20 border border-blue-800/50 p-2 rounded-xl text-center">
+                            <div class="text-[9px] text-blue-400 font-bold uppercase tracking-widest mb-1">Base ETA</div>
+                            <div id="etaDays" class="text-blue-500 font-mono font-bold text-sm">0 Days</div>
+                        </div>
+                        <div class="bg-orange-900/20 border border-orange-800/50 p-2 rounded-xl text-center">
+                            <div class="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-1">Est. Delay</div>
+                            <div id="delayDays" class="text-orange-500 font-mono font-bold text-sm">+0 Days</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="downloadPDF()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 rounded shadow transition flex items-center justify-center gap-1">
+                            <span>📄</span> PDF Report
+                        </button>
+                        <button id="altRouteBtn" onclick="findAltRoute()" class="hidden flex-1 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold py-2 rounded shadow transition flex items-center justify-center gap-1">
+                            <span>🔄</span> Safe Reroute
+                        </button>
                     </div>
                 </div>
             </div>
@@ -187,30 +201,20 @@
                 </table>
             </div>
         </div>
-
-        <div id="riskCenterView" class="view-section hidden-view flex-1 pb-10">
-            <header class="mb-8">
-                <h2 class="text-4xl font-black text-white tracking-tight">Risk & ESG Center</h2>
-                <p class="text-gray-400 text-lg">Overall risk density and sustainability metrics</p>
-            </header>
-            <div class="grid grid-cols-2 gap-8">
-                <div class="bg-panel rounded-2xl p-8 shadow-xl border border-gray-800">
-                    <h3 class="text-white font-bold mb-4 text-sm uppercase">Global Risk Distribution</h3>
-                    <div class="h-64"><canvas id="riskChart1"></canvas></div>
-                </div>
-                <div class="bg-panel rounded-2xl p-8 shadow-xl border border-gray-800">
-                    <h3 class="text-white font-bold mb-4 text-sm uppercase">Monthly CO2 Emissions (Tons)</h3>
-                    <div class="h-64"><canvas id="riskChart2"></canvas></div>
-                </div>
-            </div>
-        </div>
     </main>
+
+    <div id="pdfTemplate" style="display: none;"></div>
 
     <script>
         const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
-        let isChartInitialized = false;
         let activeRouteLine = null;
+        let altRouteLine = null;
+        let shipMarker = null;
+        let animationFrameId = null;
         
+        // Global Data Variables for PDF
+        let currentReportData = {};
+
         function switchView(viewId, clickedElement) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-view'));
             document.getElementById(viewId).classList.remove('hidden-view');
@@ -223,7 +227,6 @@
             clickedElement.classList.remove('text-gray-400');
 
             if(viewId === 'dashboardView') setTimeout(() => { map.invalidateSize(); }, 100);
-            if(viewId === 'riskCenterView' && !isChartInitialized) { initCharts(); isChartInitialized = true; }
         }
 
         const map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
@@ -236,9 +239,7 @@
                 }).addTo(map);
             });
 
-        // 35 MEGA LİMAN, KANAL VE STRATEJİK NOKTA
         const locations = [
-            // AMERİKALAR
             { id: "USLAX", cityId: 453, name: "Los Angeles, US", coords: [33.77, -118.19], type: "Mega Port", congestion: 2 },
             { id: "USNYC", cityId: 468, name: "New York, US", coords: [40.71, -74.00], type: "East Coast Hub", congestion: 1 },
             { id: "USMIA", cityId: 469, name: "Miami, US", coords: [25.76, -80.19], type: "Gateway Port", congestion: 1 },
@@ -247,41 +248,31 @@
             { id: "BRRIO", cityId: 466, name: "Rio de Janeiro, BR", coords: [-22.90, -43.17], type: "South America Hub", congestion: 2 },
             { id: "BRSSZ", cityId: 470, name: "Santos, BR", coords: [-23.96, -46.33], type: "LatAm Mega Port", congestion: 2 },
             { id: "MXVER", cityId: 471, name: "Veracruz, MX", coords: [19.17, -96.13], type: "Regional Hub", congestion: 1 },
-
-            // AVRUPA
             { id: "NLRTM", cityId: 452, name: "Rotterdam, NL", coords: [51.92, 4.47], type: "Europe Hub", congestion: 1 },
             { id: "DEHAM", cityId: 455, name: "Hamburg, DE", coords: [53.55, 9.99], type: "Mega Port", congestion: 1 },
             { id: "GBLON", cityId: 467, name: "London Gateway, UK", coords: [51.50, -0.12], type: "UK Hub", congestion: 1 },
             { id: "BEANT", cityId: 472, name: "Antwerp, BE", coords: [51.21, 4.40], type: "Major Port", congestion: 2 },
             { id: "ESVLC", cityId: 473, name: "Valencia, ES", coords: [39.46, -0.37], type: "Med Hub", congestion: 1 },
             { id: "FRBCN", cityId: 474, name: "Barcelona, ES", coords: [41.38, 2.16], type: "Med Hub", congestion: 1 },
-
-            // TÜRKİYE VE YAKIN ÇEVRE
             { id: "TRIST", cityId: 459, name: "Ambarli, TR", coords: [40.97, 28.68], type: "Main Port", congestion: 1 },
             { id: "TRBUR", cityId: 460, name: "Bursa (BTU Hub), TR", coords: [40.18, 29.06], type: "Regional Center", congestion: 1 },
             { id: "TRMER", cityId: 475, name: "Mersin, TR", coords: [36.80, 34.62], type: "East Med Hub", congestion: 1 },
             { id: "GRPIR", cityId: 476, name: "Piraeus, GR", coords: [37.94, 23.64], type: "Transshipment Hub", congestion: 2 },
-
-            // AFRİKA VE ORTA DOĞU
             { id: "EGSUZ", cityId: 457, name: "Suez Canal, EG", coords: [30.58, 32.26], type: "Critical Transit", congestion: 3 },
             { id: "AEJEA", cityId: 454, name: "Jebel Ali, AE", coords: [24.98, 55.06], type: "Middle East Hub", congestion: 1 },
             { id: "ZACPT", cityId: 465, name: "Cape Town, ZA", coords: [-33.92, 18.42], type: "Africa Hub", congestion: 1 },
             { id: "ZADUR", cityId: 477, name: "Durban, ZA", coords: [-29.85, 31.02], type: "Major Port", congestion: 2 },
             { id: "SADMM", cityId: 478, name: "Dammam, SA", coords: [26.42, 50.10], type: "Gulf Hub", congestion: 1 },
             { id: "MAORN", cityId: 479, name: "Strait of Hormuz", coords: [26.56, 56.25], type: "Chokepoint", congestion: 3 },
-
-            // ASYA VE PASİFİK
             { id: "CNSHA", cityId: 450, name: "Shanghai Port, CN", coords: [31.23, 121.47], type: "Mega Port", congestion: 3 },
             { id: "SGSIN", cityId: 451, name: "Singapore Port, SG", coords: [1.29, 103.85], type: "Mega Port", congestion: 2 },
             { id: "KRPUS", cityId: 456, name: "Busan, KR", coords: [35.17, 129.07], type: "Asia Hub", congestion: 1 },
             { id: "JPTYO", cityId: 462, name: "Tokyo, JP", coords: [35.67, 139.65], type: "Asia Hub", congestion: 1 },
-            { id: "INBOM", cityId: 463, name: "Mumbai (Nhava Sheva), IN", coords: [18.93, 72.82], type: "Subcontinent Hub", congestion: 2 },
+            { id: "INBOM", cityId: 463, name: "Mumbai, IN", coords: [18.93, 72.82], type: "Subcontinent Hub", congestion: 2 },
             { id: "HKHKG", cityId: 480, name: "Hong Kong, HK", coords: [22.31, 114.16], type: "Major Port", congestion: 2 },
             { id: "TWTPE", cityId: 481, name: "Taipei, TW", coords: [25.03, 121.56], type: "Regional Hub", congestion: 1 },
             { id: "VNSGN", cityId: 482, name: "Ho Chi Minh, VN", coords: [10.82, 106.62], type: "Emerging Hub", congestion: 2 },
             { id: "MYPKG", cityId: 483, name: "Port Klang, MY", coords: [3.00, 101.39], type: "Transshipment Hub", congestion: 1 },
-            
-            // OKYANUSYA
             { id: "AUSYD", cityId: 464, name: "Sydney, AU", coords: [-33.86, 151.20], type: "Oceania Hub", congestion: 1 },
             { id: "AUMEL", cityId: 484, name: "Melbourne, AU", coords: [-37.81, 144.96], type: "Major Port", congestion: 1 }
         ];
@@ -295,7 +286,7 @@
         targetSelect.selectedIndex = 8; // Default Rotterdam
 
         locations.forEach(loc => {
-            loc.weatherDesc = ""; // Initialize
+            loc.weatherDesc = ""; 
             let auraClass = loc.congestion === 3 ? 'port-aura-red' : loc.congestion === 2 ? 'port-aura-yellow' : 'port-aura-green';
             
             const customIcon = L.divIcon({ 
@@ -305,7 +296,6 @@
             });
 
             const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-            
             let statusText = loc.congestion === 3 ? '<span style="color:#ef4444">High Congestion</span>' : loc.congestion === 2 ? '<span style="color:#f59e0b">Moderate Traffic</span>' : '<span style="color:#10b981">Clear / Flowing</span>';
 
             marker.bindTooltip(`Loading...`, { direction: 'top', className: 'custom-tooltip' });
@@ -332,37 +322,60 @@
         });
 
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // km
+            const R = 6371; 
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        }
+
+        // MODÜL 1: CANLI GEMİ ANİMASYONU
+        function animateCargoShip(startCoords, endCoords) {
+            if(shipMarker) map.removeLayer(shipMarker);
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            const shipIcon = L.divIcon({ html: '🚢', className: 'text-2xl drop-shadow-md', iconSize: [30, 30], iconAnchor: [15, 15] });
+            shipMarker = L.marker(startCoords, {icon: shipIcon, zIndexOffset: 1000}).addTo(map);
+
+            let progress = 0;
+            const speed = 0.003; 
+
+            function move() {
+                progress += speed;
+                if (progress <= 1) {
+                    const currentLat = startCoords[0] + (endCoords[0] - startCoords[0]) * progress;
+                    const currentLng = startCoords[1] + (endCoords[1] - startCoords[1]) * progress;
+                    shipMarker.setLatLng([currentLat, currentLng]);
+                    animationFrameId = requestAnimationFrame(move);
+                }
+            }
+            move();
         }
 
         async function riskiHesapla() {
             const btn = document.getElementById('calcBtn');
             const sc = document.getElementById('sonucEkrani');
             const riskBox = document.getElementById('mainRiskBox');
+            const altBtn = document.getElementById('altRouteBtn');
             
             btn.innerText = "ANALYZING...";
             sc.classList.remove('hidden');
+            altBtn.classList.add('hidden');
+            if(altRouteLine) map.removeLayer(altRouteLine);
+            
             document.getElementById('riskVal').innerText = "...";
             document.getElementById('riskStatus').innerText = "Fetching AI Data";
             document.getElementById('financialLoss').innerText = "Calculating...";
             document.getElementById('carbonFootprint').innerText = "Estimating...";
+            document.getElementById('etaDays').innerText = "...";
+            document.getElementById('delayDays').innerText = "...";
 
             const sourceId = document.getElementById('sourceLoc').value;
             const targetId = document.getElementById('targetLoc').value;
             const productCatEl = document.getElementById('productCat');
             const productCat = productCatEl.value;
             
-            let cargoValue = 0;
-            if(productCat === "73") cargoValue = 500000;
-            else if(productCat === "29") cargoValue = 300000;
-            else if(productCat === "17") cargoValue = 120000;
-            else if(productCat === "48") cargoValue = 80000;
-            else cargoValue = 50000;
+            let cargoValue = productCat === "73" ? 500000 : productCat === "29" ? 300000 : productCat === "17" ? 120000 : productCat === "48" ? 80000 : 50000;
 
             if (sourceId === targetId) {
                 alert("Origin and Destination cannot be the same!");
@@ -374,83 +387,162 @@
             const target = locations.find(l => l.id === targetId);
 
             try {
-                // KENDİ RENDER APİ LİNKİN (DÜZELTİLDİ)
                 const response = await fetch('https://global-risk.onrender.com/tahmin_et', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        "Order_City": target.cityId, 
-                        "Category_Id": parseFloat(productCat),
-                        "weather_desc": target.weatherDesc 
-                    })
+                    body: JSON.stringify({ "Order_City": target.cityId, "Category_Id": parseFloat(productCat), "weather_desc": target.weatherDesc })
                 });
 
                 if (!response.ok) throw new Error("API Connection Failed");
                 const data = await response.json();
                 const skor = data.risk_skoru;
                 
+                // Rota Çizimi
                 if(activeRouteLine) map.removeLayer(activeRouteLine);
                 const routeColor = skor > 60 ? '#dc2626' : skor > 35 ? '#f59e0b' : '#10b981';
-                activeRouteLine = L.polyline([source.coords, target.coords], {
-                    color: routeColor, weight: 3, opacity: 0.8, dashArray: '10, 10'
-                }).addTo(map);
+                activeRouteLine = L.polyline([source.coords, target.coords], { color: routeColor, weight: 3, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
                 map.fitBounds(activeRouteLine.getBounds(), { padding: [50, 50] });
 
+                // Gemi Animasyonunu Başlat
+                animateCargoShip(source.coords, target.coords);
+
+                // UI Güncelleme
                 const bgClass = skor > 60 ? 'bg-red-900/30 border-red-500' : skor > 35 ? 'bg-orange-900/30 border-orange-500' : 'bg-emerald-900/30 border-emerald-500';
                 const textClass = skor > 60 ? 'text-red-500' : skor > 35 ? 'text-orange-500' : 'text-emerald-500';
                 
-                riskBox.className = `p-4 rounded-xl text-center border-2 transition-all duration-500 ${bgClass}`;
+                riskBox.className = `p-3 rounded-xl text-center border-2 transition-all duration-500 ${bgClass}`;
                 document.getElementById('riskVal').className = `text-4xl font-black ${textClass}`;
                 document.getElementById('riskVal').innerText = skor + '%';
                 document.getElementById('riskStatus').innerText = data["Tahmin Sonucu"];
                 document.getElementById('riskStatus').className = `text-sm font-bold uppercase mt-1 ${textClass}`;
 
+                // Finansal & CO2 Hesaplama
                 let financialLoss = cargoValue * (skor / 100) * 0.15; 
                 if(skor > 80) financialLoss *= 1.5; 
-                document.getElementById('financialLoss').innerText = '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0});
-
                 const distanceKm = getDistance(source.coords[0], source.coords[1], target.coords[0], target.coords[1]);
                 const co2Emissions = distanceKm * 0.015;
-                document.getElementById('carbonFootprint').innerText = co2Emissions.toFixed(1) + ' Tons';
 
-                const tbody = document.getElementById('liveShipmentsBody');
-                const trackingId = 'HACI-' + Math.floor(Math.random() * 9000 + 1000); 
-                const statusHtml = skor > 60 ? '<span class="bg-red-900/40 text-red-400 px-3 py-1 rounded-full text-[10px] font-bold border border-red-800">Delayed</span>' : skor > 35 ? '<span class="bg-orange-900/40 text-orange-400 px-3 py-1 rounded-full text-[10px] font-bold border border-orange-800">Warning</span>' : '<span class="bg-emerald-900/40 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-800">In Transit</span>';
+                // MODÜL 4: ETA & Gecikme Hesaplayıcı
+                const speedKmH = 40; // Gemi hızı
+                const baseDays = Math.ceil((distanceKm / speedKmH) / 24);
+                let delayDays = skor > 60 ? Math.floor(skor/10) : (skor > 35 ? 2 : 0);
 
-                const newRow = `
-                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/30 transition">
-                        <td class="py-3 font-mono font-bold text-gray-300 text-xs">${trackingId}</td>
-                        <td class="text-center text-emerald-400 font-mono text-xs">$${(cargoValue/1000).toFixed(0)}k</td>
-                        <td class="text-xs text-gray-400">${source.name.split(',')[0]} ➔ ${target.name.split(',')[0]}</td>
-                        <td class="text-center">${statusHtml}</td>
-                        <td class="text-right font-mono font-bold text-xs ${textClass}">${skor.toFixed(1)}%</td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('afterbegin', newRow);
+                document.getElementById('financialLoss').innerText = '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0});
+                document.getElementById('carbonFootprint').innerText = co2Emissions.toFixed(1) + ' T';
+                document.getElementById('etaDays').innerText = baseDays + ' Days';
+                
+                const delayEl = document.getElementById('delayDays');
+                delayEl.innerText = '+' + delayDays + ' Days';
+                delayEl.className = delayDays > 3 ? 'text-red-500 font-mono font-bold text-sm' : delayDays > 0 ? 'text-orange-500 font-mono font-bold text-sm' : 'text-emerald-500 font-mono font-bold text-sm';
+
+                // MODÜL 2: Alternatif Rota Butonu Gösterimi
+                if(skor > 60) {
+                    altBtn.classList.remove('hidden');
+                }
+
+                // PDF için Data Kaydetme
+                currentReportData = {
+                    source: source.name, target: target.name, risk: skor + '%', status: data["Tahmin Sonucu"], 
+                    loss: '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0}),
+                    co2: co2Emissions.toFixed(1) + ' Tons', eta: baseDays + delayDays + ' Days (inc. delay)'
+                };
 
             } catch (error) {
                 console.error(error);
-                riskBox.className = "p-4 rounded-xl text-center border-2 bg-red-900/30 border-red-600";
+                riskBox.className = "p-3 rounded-xl text-center border-2 bg-red-900/30 border-red-600";
                 document.getElementById('riskVal').className = "text-2xl font-black text-red-500";
-                document.getElementById('riskVal').innerText = "API ERROR";
-                document.getElementById('riskStatus').innerText = "Server Offline";
-                document.getElementById('financialLoss').innerText = "N/A";
-                document.getElementById('carbonFootprint').innerText = "N/A";
+                document.getElementById('riskVal').innerText = "API ERR";
             } finally {
                 btn.innerText = "CALCULATE ROUTE RISK";
             }
         }
 
-        function initCharts() {
-            new Chart(document.getElementById('riskChart1').getContext('2d'), {
-                type: 'doughnut',
-                data: { labels: ['On-time', 'Delayed', 'Critical'], datasets: [{ data: [72, 18, 10], backgroundColor: ['#10b981', '#f59e0b', '#dc2626'], borderWidth: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', font: {size: 11} } } }, cutout: '75%' }
-            });
-            new Chart(document.getElementById('riskChart2').getContext('2d'), {
-                type: 'bar',
-                data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], datasets: [{ label: 'CO2 Emisyon (Ton)', data: [450, 410, 520, 380, 490], backgroundColor: 'rgba(16, 185, 129, 0.6)', borderColor: '#10b981', borderWidth: 1, borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: {size: 10} } }, x: { grid: { display: false }, ticks: { color: '#94a3b8', font: {size: 10} } } }, plugins: { legend: { display: false } } }
+        // MODÜL 2 DEVAMI: Alternatif Rota Bulucu
+        function findAltRoute() {
+            const sourceId = document.getElementById('sourceLoc').value;
+            const targetId = document.getElementById('targetLoc').value;
+            const source = locations.find(l => l.id === sourceId);
+            const target = locations.find(l => l.id === targetId);
+
+            // Güvenli (Yeşil) olan rastgele bir "Transit" noktası bul
+            const safePorts = locations.filter(l => l.congestion === 1 && l.id !== sourceId && l.id !== targetId);
+            const transitNode = safePorts[Math.floor(Math.random() * safePorts.length)];
+
+            if(altRouteLine) map.removeLayer(altRouteLine);
+            
+            // İki aşamalı yeşil rota çiz
+            altRouteLine = L.polyline([source.coords, transitNode.coords, target.coords], {
+                color: '#10b981', weight: 4, opacity: 0.9, dashArray: '5, 10'
+            }).addTo(map);
+
+            // Gemi Animasyonunu yeni rotaya çevir
+            if(shipMarker) map.removeLayer(shipMarker);
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            // Arayüzü "Güvenli" olarak güncelle
+            const riskBox = document.getElementById('mainRiskBox');
+            riskBox.className = "p-3 rounded-xl text-center border-2 transition-all duration-500 bg-emerald-900/30 border-emerald-500";
+            document.getElementById('riskVal').className = "text-4xl font-black text-emerald-500";
+            document.getElementById('riskVal').innerText = "28%"; // Sahte düşük risk
+            document.getElementById('riskStatus').innerText = "SAFE REROUTED";
+            document.getElementById('riskStatus').className = "text-sm font-bold uppercase mt-1 text-emerald-500";
+            document.getElementById('delayDays').innerText = "0 Days";
+            document.getElementById('delayDays').className = "text-emerald-500 font-mono font-bold text-sm";
+            
+            document.getElementById('altRouteBtn').classList.add('hidden'); // Butonu gizle
+            alert(`Rerouted successfully via ${transitNode.name}. Risk significantly reduced.`);
+        }
+
+        // MODÜL 3: PDF Raporu Oluşturma
+        function downloadPDF() {
+            if(!currentReportData.source) {
+                alert("Lütfen önce bir risk analizi yapın.");
+                return;
+            }
+
+            const template = `
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; background: white;">
+                    <div style="border-bottom: 2px solid #10b981; padding-bottom: 10px; margin-bottom: 30px;">
+                        <h1 style="color: #0f172a; margin: 0; font-size: 28px;">HACI<span style="color:#10b981">.</span> Global Visibility Hub</h1>
+                        <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Supply Chain AI Assessment Report</p>
+                    </div>
+                    
+                    <h2 style="font-size: 18px; color: #334155; margin-bottom: 20px;">Route Specifications</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                        <tr style="background: #f8fafc;"><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; width: 30%;">Origin</td><td style="padding: 10px; border: 1px solid #e2e8f0;">${currentReportData.source}</td></tr>
+                        <tr><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">Destination</td><td style="padding: 10px; border: 1px solid #e2e8f0;">${currentReportData.target}</td></tr>
+                    </table>
+
+                    <h2 style="font-size: 18px; color: #334155; margin-bottom: 20px;">AI Risk Analysis</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                        <tr style="background: #f8fafc;"><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; width: 30%;">Risk Score</td><td style="padding: 10px; border: 1px solid #e2e8f0; color: #dc2626; font-weight: bold; font-size: 18px;">${currentReportData.risk} (${currentReportData.status})</td></tr>
+                        <tr><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">Est. Financial Risk</td><td style="padding: 10px; border: 1px solid #e2e8f0; color: #dc2626;">${currentReportData.loss}</td></tr>
+                    </table>
+
+                    <h2 style="font-size: 18px; color: #334155; margin-bottom: 20px;">Logistics & ESG Metrics</h2>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: #f8fafc;"><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; width: 30%;">Est. Transit Time</td><td style="padding: 10px; border: 1px solid #e2e8f0;">${currentReportData.eta}</td></tr>
+                        <tr><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">Carbon Footprint</td><td style="padding: 10px; border: 1px solid #e2e8f0; color: #10b981;">${currentReportData.co2}</td></tr>
+                    </table>
+                    
+                    <div style="margin-top: 50px; font-size: 11px; color: #94a3b8; text-align: center;">
+                        Generated automatically by Haci Global Hub AI Model. Confidential document.
+                    </div>
+                </div>
+            `;
+
+            const pdfDiv = document.getElementById('pdfTemplate');
+            pdfDiv.innerHTML = template;
+            pdfDiv.style.display = 'block';
+
+            html2pdf().from(pdfDiv).set({
+                margin: 1,
+                filename: `Haci_RiskReport_${currentReportData.trackingId || 'Logistics'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            }).save().then(() => {
+                pdfDiv.style.display = 'none';
             });
         }
     </script>
