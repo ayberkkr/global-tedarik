@@ -11,103 +11,114 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        body { background-color: #0b1121; color: #e2e8f0; }
-        .bg-panel { background-color: #111827; border: 1px solid #1f2937; }
-        .text-accent { color: #10b981; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-        #map { height: 100%; width: 100%; border-radius: 0.75rem; background-color: #0b1121; outline: none; }
-        .neon-glow { filter: drop-shadow(0 0 2px #10b981) drop-shadow(0 0 5px #10b981); }
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .bg-panel { background-color: #1e293b; border: 1px solid #334155; }
+        .text-accent { color: #3b82f6; }
         
-        .port-aura-green { border-radius: 50%; background: rgba(16, 185, 129, 0.3); border: 2px solid #10b981; animation: pulse-green 2s infinite; }
-        .port-aura-yellow { border-radius: 50%; background: rgba(245, 158, 11, 0.3); border: 2px solid #f59e0b; animation: pulse-yellow 2s infinite; }
-        .port-aura-red { border-radius: 50%; background: rgba(220, 38, 38, 0.4); border: 2px solid #dc2626; animation: pulse-red 1.5s infinite; }
+        #map { height: 100%; width: 100%; border-radius: 0.5rem; background-color: #0b1120; outline: none; }
         
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-        @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.8); } 70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+        /* Rafine Edilmiş Liman Sağlık İndeksi (Daha yumuşak aurar) */
+        .port-aura-green { border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10b981; animation: pulse-green 3s infinite; }
+        .port-aura-yellow { border-radius: 50%; background: rgba(245, 158, 11, 0.2); border: 1.5px solid #f59e0b; animation: pulse-yellow 2.5s infinite; }
+        .port-aura-red { border-radius: 50%; background: rgba(239, 68, 68, 0.25); border: 1.5px solid #ef4444; animation: pulse-red 2s infinite; }
         
-        .ticker-wrap { width: 100%; overflow: hidden; background-color: rgba(15, 23, 42, 0.9); border-top: 1px solid #334155; position: absolute; bottom: 0; left: 0; z-index: 1000; display: flex; align-items: center; padding: 4px 0; }
-        .ticker-title { background: #dc2626; color: white; padding: 4px 12px; font-weight: bold; font-size: 12px; z-index: 10; letter-spacing: 1px; }
-        .ticker-move { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker 25s linear infinite; }
-        .ticker-item { display: inline-block; padding: 0 2rem; font-size: 13px; color: #cbd5e1; font-family: monospace; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        /* Modern ve Mat Ticker */
+        .ticker-wrap { width: 100%; overflow: hidden; background-color: rgba(30, 41, 59, 0.95); border-top: 1px solid #475569; position: absolute; bottom: 0; left: 0; z-index: 1000; display: flex; align-items: center; padding: 6px 0; backdrop-filter: blur(4px); }
+        .ticker-title { background: #ef4444; color: white; padding: 2px 10px; font-weight: 600; font-size: 11px; z-index: 10; letter-spacing: 0.5px; border-radius: 4px; margin-left: 12px; }
+        .ticker-move { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker 30s linear infinite; }
+        .ticker-item { display: inline-block; padding: 0 2rem; font-size: 12px; color: #cbd5e1; font-weight: 500; }
         @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
         .leaflet-control-attribution { display: none !important; }
         .leaflet-tooltip.custom-tooltip { background: transparent; border: none; box-shadow: none; }
         .hidden-view { display: none !important; }
-        .active-menu { background-color: #059669; color: white; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.5); }
+        .active-menu { background-color: #f1f5f9; color: #0f172a !important; font-weight: 600; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden font-sans">
+<body class="flex h-screen overflow-hidden">
 
-    <aside class="w-[380px] bg-[#0f172a] border-r border-gray-800 flex flex-col z-50">
+    <aside class="w-[340px] bg-[#0b1120] border-r border-slate-800 flex flex-col z-50 shadow-xl">
         <div class="p-6">
-            <h1 class="text-4xl font-extrabold text-white mb-10">Haci<span class="text-accent">.</span></h1>
-            <nav class="space-y-4" id="sidebarMenu">
-                <a href="#" onclick="switchView('dashboardView', this)" class="menu-item active-menu flex items-center py-3 px-6 rounded-xl text-lg font-bold transition text-gray-400 hover:text-white hover:bg-gray-800">
-                    <span class="mr-3">📊</span> Dashboard
+            <h1 class="text-3xl font-extrabold tracking-tight text-white mb-8">Haci<span class="text-blue-500">.</span></h1>
+            <nav class="space-y-2" id="sidebarMenu">
+                <a href="#" onclick="switchView('dashboardView', this)" class="menu-item active-menu flex items-center py-2.5 px-4 rounded-lg text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                    <span class="mr-3 opacity-80">📊</span> Dashboard
                 </a>
-                <a href="#" onclick="switchView('shipmentsView', this)" class="menu-item flex items-center py-3 px-6 rounded-xl text-lg transition text-gray-400 hover:text-white hover:bg-gray-800">
-                    <span class="mr-3">🚢</span> Live Shipments
+                <a href="#" onclick="switchView('shipmentsView', this)" class="menu-item flex items-center py-2.5 px-4 rounded-lg text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                    <span class="mr-3 opacity-80">🚢</span> Live Shipments
                 </a>
             </nav>
         </div>
         
-        <div class="mt-auto p-6 bg-gray-900 border-t border-gray-800 overflow-y-auto max-h-[75vh]">
-            <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center"><span class="mr-2">🤖</span> AI Risk Analysis</h3>
-            <div class="space-y-4">
+        <div class="mt-auto p-6 bg-[#0f172a] border-t border-slate-800 overflow-y-auto max-h-[75vh]">
+            <h3 class="text-sm font-semibold text-slate-300 mb-5 flex items-center uppercase tracking-wide"><span class="mr-2 text-blue-500">⚡</span> Risk Analysis Engine</h3>
+            <div class="space-y-5">
                 <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Route Selection</label>
-                    <div class="grid grid-cols-2 gap-2 mt-1">
-                        <select id="sourceLoc" class="bg-gray-800 text-white p-2 rounded border border-gray-700 text-xs outline-none"></select>
-                        <select id="targetLoc" class="bg-gray-800 text-white p-2 rounded border border-gray-700 text-xs outline-none"></select>
+                    <label class="text-[10px] text-slate-500 uppercase font-semibold tracking-wider block mb-1.5">Route Configuration</label>
+                    <div class="flex flex-col gap-2">
+                        <select id="sourceLoc" class="w-full bg-slate-800/50 text-slate-200 p-2.5 rounded-md border border-slate-700 text-xs outline-none focus:border-blue-500 transition-colors"></select>
+                        <select id="targetLoc" class="w-full bg-slate-800/50 text-slate-200 p-2.5 rounded-md border border-slate-700 text-xs outline-none focus:border-blue-500 transition-colors"></select>
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Product Category</label>
-                    <select id="productCat" class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 text-sm outline-none mt-1">
-                        <option value="73">💻 Electronics ($500k Value)</option>
-                        <option value="17">⚽ Sporting Goods ($120k Value)</option>
-                        <option value="29">👕 Apparel / Fashion ($300k Value)</option>
-                        <option value="48">🧸 Toys ($80k Value)</option>
-                        <option value="12">🍎 Food & Beverage ($50k Value)</option>
+                    <label class="text-[10px] text-slate-500 uppercase font-semibold tracking-wider block mb-1.5">Asset Category</label>
+                    <select id="productCat" class="w-full bg-slate-800/50 text-slate-200 p-2.5 rounded-md border border-slate-700 text-xs outline-none focus:border-blue-500 transition-colors">
+                        <option value="73">Electronics ($500k Value)</option>
+                        <option value="17">Sporting Goods ($120k Value)</option>
+                        <option value="29">Apparel / Fashion ($300k Value)</option>
+                        <option value="48">Toys ($80k Value)</option>
+                        <option value="12">Food & Beverage ($50k Value)</option>
                     </select>
                 </div>
-                <button onclick="riskiHesapla()" id="calcBtn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-4 rounded-xl text-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] transition">
-                    CALCULATE ROUTE RISK
+                <button onclick="riskiHesapla()" id="calcBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-md text-sm shadow-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0f172a]">
+                    Compute Risk Profile
                 </button>
                 
-                <div id="sonucEkrani" class="mt-2 hidden flex flex-col gap-2">
-                    <div id="mainRiskBox" class="p-3 rounded-xl text-center border-2 bg-gray-800 border-gray-600 transition-all duration-500">
-                        <div id="riskVal" class="text-4xl font-black text-white">-%</div>
-                        <div id="riskStatus" class="text-sm font-bold uppercase mt-1 text-gray-400">Waiting</div>
+                <div id="sonucEkrani" class="mt-2 hidden flex flex-col gap-3">
+                    <div id="mainRiskBox" class="p-4 rounded-lg text-center border bg-slate-800 border-slate-700 transition-all duration-300 shadow-inner">
+                        <div id="riskVal" class="text-3xl font-bold text-white tracking-tight">-%</div>
+                        <div id="riskStatus" class="text-xs font-medium uppercase mt-1 text-slate-400">Awaiting Computation</div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-red-900/20 border border-red-800/50 p-2 rounded-xl text-center">
-                            <div class="text-[9px] text-red-400 font-bold uppercase tracking-widest mb-1">Cost of Delay</div>
-                            <div id="financialLoss" class="text-red-500 font-mono font-bold text-sm">$0</div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 p-2.5 rounded-md text-center">
+                            <div class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Exposure</div>
+                            <div id="financialLoss" class="text-slate-200 font-mono font-medium text-xs">$0</div>
                         </div>
-                        <div class="bg-emerald-900/20 border border-emerald-800/50 p-2 rounded-xl text-center">
-                            <div class="text-[9px] text-emerald-400 font-bold uppercase tracking-widest mb-1">CO2 Emission</div>
-                            <div id="carbonFootprint" class="text-emerald-500 font-mono font-bold text-sm">0 Tons</div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 p-2.5 rounded-md text-center">
+                            <div class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Carbon Impact</div>
+                            <div id="carbonFootprint" class="text-slate-200 font-mono font-medium text-xs">0 Tons</div>
                         </div>
-                        <div class="bg-blue-900/20 border border-blue-800/50 p-2 rounded-xl text-center">
-                            <div class="text-[9px] text-blue-400 font-bold uppercase tracking-widest mb-1">Base ETA</div>
-                            <div id="etaDays" class="text-blue-500 font-mono font-bold text-sm">0 Days</div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 p-2.5 rounded-md text-center">
+                            <div class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Base ETA</div>
+                            <div id="etaDays" class="text-slate-200 font-mono font-medium text-xs">0 Days</div>
                         </div>
-                        <div class="bg-orange-900/20 border border-orange-800/50 p-2 rounded-xl text-center">
-                            <div class="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-1">Est. Delay</div>
-                            <div id="delayDays" class="text-orange-500 font-mono font-bold text-sm">+0 Days</div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 p-2.5 rounded-md text-center">
+                            <div class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Est. Variance</div>
+                            <div id="delayDays" class="text-slate-200 font-mono font-medium text-xs">+0 Days</div>
                         </div>
                     </div>
 
-                    <div class="flex gap-2 mt-2">
-                        <button onclick="downloadPDF()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 rounded shadow transition flex items-center justify-center gap-1">
-                            <span>📄</span> PDF Report
+                    <div class="flex gap-2 mt-1">
+                        <button onclick="downloadPDF()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-[11px] font-medium py-2 rounded-md transition-colors flex items-center justify-center gap-1.5 border border-slate-600">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Export
                         </button>
-                        <button id="altRouteBtn" onclick="findAltRoute()" class="hidden flex-1 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold py-2 rounded shadow transition flex items-center justify-center gap-1">
-                            <span>🔄</span> Safe Reroute
+                        <button id="altRouteBtn" onclick="findAltRoute()" class="hidden flex-1 bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-medium py-2 rounded-md transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Optimization
                         </button>
                     </div>
                 </div>
@@ -115,57 +126,61 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col p-8 overflow-hidden relative">
-        <div id="dashboardView" class="view-section flex-1 flex flex-col h-full relative pb-10">
-            <header class="flex justify-between items-center mb-6">
+    <main class="flex-1 flex flex-col p-6 overflow-hidden relative bg-[#0b1120]">
+        <div id="dashboardView" class="view-section flex-1 flex flex-col h-full relative pb-8">
+            <header class="flex justify-between items-end mb-6">
                 <div>
-                    <h2 class="text-4xl font-black text-white tracking-tight">Global Visibility Hub</h2>
-                    <p class="text-gray-400 text-lg">Supply Chain Resilience & ESG Tracking System</p>
+                    <h2 class="text-2xl font-bold text-slate-100 tracking-tight">Global Visibility Hub</h2>
+                    <p class="text-slate-400 text-sm mt-1">Supply Chain Resilience & Environmental Tracking</p>
                 </div>
-                <button onclick="map.setView([20, 10], 2)" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-bold transition">Reset Map</button>
+                <button onclick="map.setView([20, 10], 2)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-md text-xs font-medium border border-slate-700 transition-colors">Recenter View</button>
             </header>
 
-            <div class="grid grid-cols-3 gap-8 mb-4 flex-1 h-full">
-                <div class="col-span-2 bg-panel rounded-2xl h-full shadow-2xl relative p-1 overflow-hidden">
-                    <div id="map"></div>
+            <div class="grid grid-cols-4 gap-6 mb-4 flex-1 h-full">
+                <div class="col-span-3 bg-panel rounded-xl h-full relative overflow-hidden flex flex-col">
+                    <div id="map" class="flex-1"></div>
                     
                     <div class="ticker-wrap">
-                        <div class="ticker-title">LIVE CRISIS RADAR</div>
+                        <div class="ticker-title">SYSTEM ALERTS</div>
                         <div class="ticker-move">
-                            <div class="ticker-item">🚨 SUEZ CANAL: Heavy winds, transit delayed by 24h.</div>
-                            <div class="ticker-item">⚠️ SHANGHAI PORT: 88% Congestion. Vessel queues building up.</div>
-                            <div class="ticker-item">🚢 ROTTERDAM: Terminal operations running normally.</div>
-                            <div class="ticker-item">⚡ PANAMA CANAL: Drought restrictions active, max draft reduced.</div>
-                            <div class="ticker-item">🇹🇷 BURSA (BTU Hub): Local logistics operating at peak efficiency.</div>
-                            <div class="ticker-item">⚠️ LOS ANGELES: Labor strike negotiations ongoing.</div>
-                            <div class="ticker-item">🔴 STRAIT OF HORMUZ: Security concerns elevating rerouting risks.</div>
+                            <div class="ticker-item"><span class="text-red-400">CRITICAL</span> SUEZ CANAL: Heavy winds, transit delayed by 24h.</div>
+                            <div class="ticker-item"><span class="text-amber-400">WARNING</span> SHANGHAI PORT: 88% Congestion. Vessel queues building up.</div>
+                            <div class="ticker-item"><span class="text-emerald-400">INFO</span> ROTTERDAM: Terminal operations running normally.</div>
+                            <div class="ticker-item"><span class="text-amber-400">WARNING</span> PANAMA CANAL: Drought restrictions active, max draft reduced.</div>
+                            <div class="ticker-item"><span class="text-emerald-400">INFO</span> BURSA (BTU Hub): Local logistics operating at peak efficiency.</div>
+                            <div class="ticker-item"><span class="text-red-400">CRITICAL</span> STRAIT OF HORMUZ: Security concerns elevating rerouting risks.</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex flex-col space-y-6 h-full overflow-y-auto pr-2">
-                    <div class="bg-panel p-6 rounded-2xl shadow-xl">
-                        <h3 class="text-gray-500 text-xs font-black mb-2 uppercase tracking-widest">NETWORK HEALTH INDEX</h3>
-                        <div class="text-5xl font-black text-white">84.2 <span class="text-lg text-red-500 font-bold ml-2">-3.1%</span></div>
-                        <div class="w-full bg-gray-800 h-2 mt-4 rounded-full"><div class="bg-yellow-500 h-full rounded-full w-[84%] shadow-[0_0_10px_#f59e0b]"></div></div>
+                <div class="flex flex-col space-y-5 h-full overflow-y-auto">
+                    <div class="bg-panel p-5 rounded-xl">
+                        <h3 class="text-slate-500 text-[10px] font-bold mb-1 uppercase tracking-widest">Network Health</h3>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-bold text-slate-100">84.2</span>
+                            <span class="text-xs text-amber-500 font-medium">-3.1%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 mt-3 rounded-full overflow-hidden">
+                            <div class="bg-amber-500 h-full rounded-full w-[84%]"></div>
+                        </div>
                     </div>
                     
-                    <div class="bg-panel p-6 rounded-2xl shadow-xl flex-1 border border-red-900/30">
-                        <h3 class="text-gray-500 text-xs font-black mb-4 uppercase tracking-widest text-red-400 flex items-center"><span class="mr-2">🔥</span> CRITICAL BOTTLENECKS</h3>
-                        <div class="space-y-3" id="criticalRisksContainer">
-                            <div class="bg-red-950/40 border border-red-800/50 p-3 rounded-lg flex justify-between items-center">
+                    <div class="bg-panel p-5 rounded-xl flex-1 flex flex-col">
+                        <h3 class="text-slate-500 text-[10px] font-bold mb-3 uppercase tracking-widest flex items-center"><span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span> Active Bottlenecks</h3>
+                        <div class="space-y-2 flex-1" id="criticalRisksContainer">
+                            <div class="bg-slate-800/50 border border-red-900/30 p-3 rounded-lg flex justify-between items-center">
                                 <div>
-                                    <div class="font-bold text-sm text-white">Shanghai Port</div>
-                                    <div class="text-xs text-red-400">Severe Congestion</div>
+                                    <div class="font-medium text-xs text-slate-200">Shanghai Port</div>
+                                    <div class="text-[10px] text-red-400 mt-0.5">Severe Congestion</div>
                                 </div>
-                                <span class="text-[10px] bg-red-600 px-2 py-1 rounded text-white font-black">92%</span>
+                                <span class="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-medium">92%</span>
                             </div>
-                            <div class="bg-orange-950/40 border border-orange-800/50 p-3 rounded-lg flex justify-between items-center">
+                            <div class="bg-slate-800/50 border border-amber-900/30 p-3 rounded-lg flex justify-between items-center">
                                 <div>
-                                    <div class="font-bold text-sm text-white">Suez Canal</div>
-                                    <div class="text-xs text-orange-400">Weather Delay</div>
+                                    <div class="font-medium text-xs text-slate-200">Suez Canal</div>
+                                    <div class="text-[10px] text-amber-400 mt-0.5">Weather Delay</div>
                                 </div>
-                                <span class="text-[10px] bg-orange-600 px-2 py-1 rounded text-white font-black">76%</span>
+                                <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-medium">76%</span>
                             </div>
                         </div>
                     </div>
@@ -173,29 +188,31 @@
             </div>
         </div>
 
-        <div id="shipmentsView" class="view-section hidden-view flex-1 pb-10">
-            <header class="mb-8">
-                <h2 class="text-4xl font-black text-white tracking-tight">Live Shipments</h2>
-                <p class="text-gray-400 text-lg">Active shipments list and AI risk assessments</p>
+        <div id="shipmentsView" class="view-section hidden-view flex-1 pb-8">
+            <header class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-100 tracking-tight">Active Transits</h2>
+                <p class="text-slate-400 text-sm mt-1">Real-time shipment tracking and algorithmic assessments</p>
             </header>
-            <div class="bg-panel rounded-2xl p-8 shadow-xl">
-                <table class="w-full text-left">
-                    <thead class="text-gray-500 uppercase text-xs font-black border-b border-gray-800">
+            <div class="bg-panel rounded-xl shadow-sm border border-slate-800 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-800/50 text-slate-400 text-[10px] uppercase font-semibold tracking-wider">
                         <tr>
-                            <th class="pb-4">Tracking ID</th>
-                            <th class="pb-4 text-center">Value</th>
-                            <th class="pb-4">Route</th>
-                            <th class="pb-4 text-center">Status</th>
-                            <th class="pb-4 text-right">Risk Score</th>
+                            <th class="py-3 px-6 border-b border-slate-700/50">Tracking Ref</th>
+                            <th class="py-3 px-6 border-b border-slate-700/50 text-center">Exposure</th>
+                            <th class="py-3 px-6 border-b border-slate-700/50">Route Definition</th>
+                            <th class="py-3 px-6 border-b border-slate-700/50 text-center">Status</th>
+                            <th class="py-3 px-6 border-b border-slate-700/50 text-right">Risk Factor</th>
                         </tr>
                     </thead>
-                    <tbody id="liveShipmentsBody" class="text-gray-300 text-sm">
-                        <tr class="border-b border-gray-800/50">
-                            <td class="py-4 font-mono font-bold text-white">HACI-9021</td>
-                            <td class="text-center text-emerald-400 font-mono">$120,000</td>
-                            <td>Shanghai ➔ Los Angeles</td>
-                            <td class="text-center"><span class="bg-orange-900/40 text-orange-400 px-3 py-1 rounded-full text-xs font-bold border border-orange-800">Delayed</span></td>
-                            <td class="text-right font-mono text-orange-500 font-bold">78.50%</td>
+                    <tbody id="liveShipmentsBody" class="text-slate-300 text-xs">
+                        <tr class="hover:bg-slate-800/30 transition-colors border-b border-slate-800/50">
+                            <td class="py-3 px-6 font-mono text-slate-400">HACI-9021</td>
+                            <td class="py-3 px-6 text-center text-slate-400 font-mono">$120k</td>
+                            <td class="py-3 px-6">Shanghai <span class="text-slate-600 mx-1">→</span> Los Angeles</td>
+                            <td class="py-3 px-6 text-center">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Delayed</span>
+                            </td>
+                            <td class="py-3 px-6 text-right font-mono font-medium text-amber-500">78.50%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -211,8 +228,6 @@
         let altRouteLine = null;
         let shipMarker = null;
         let animationFrameId = null;
-        
-        // Global Data Variables for PDF
         let currentReportData = {};
 
         function switchView(viewId, clickedElement) {
@@ -221,21 +236,20 @@
             
             document.querySelectorAll('.menu-item').forEach(el => {
                 el.classList.remove('active-menu');
-                el.classList.add('text-gray-400');
+                el.classList.replace('text-slate-800', 'text-slate-400');
             });
             clickedElement.classList.add('active-menu');
-            clickedElement.classList.remove('text-gray-400');
 
             if(viewId === 'dashboardView') setTimeout(() => { map.invalidateSize(); }, 100);
         }
 
+        // Profesyonel Mat Harita Stili
         const map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
-        
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(res => res.json())
             .then(data => {
                 L.geoJSON(data, {
-                    style: { color: '#10b981', weight: 1, fillColor: '#0b1121', fillOpacity: 1 }
+                    style: { color: '#334155', weight: 1, fillColor: '#1e293b', fillOpacity: 1 }
                 }).addTo(map);
             });
 
@@ -279,11 +293,13 @@
 
         const sourceSelect = document.getElementById('sourceLoc');
         const targetSelect = document.getElementById('targetLoc');
-        locations.forEach(loc => {
+        locations.sort((a,b) => a.name.localeCompare(b.name)).forEach(loc => {
             sourceSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
             targetSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
         });
-        targetSelect.selectedIndex = 8; // Default Rotterdam
+        
+        sourceSelect.value = "CNSHA";
+        targetSelect.value = "NLRTM"; 
 
         locations.forEach(loc => {
             loc.weatherDesc = ""; 
@@ -291,15 +307,15 @@
             
             const customIcon = L.divIcon({ 
                 className: 'custom-radar-icon', 
-                html: `<div class="${auraClass}" style="width: 14px; height: 14px;"></div>`, 
-                iconSize: [14, 14], iconAnchor: [7, 7] 
+                html: `<div class="${auraClass}" style="width: 12px; height: 12px;"></div>`, 
+                iconSize: [12, 12], iconAnchor: [6, 6] 
             });
 
             const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-            let statusText = loc.congestion === 3 ? '<span style="color:#ef4444">High Congestion</span>' : loc.congestion === 2 ? '<span style="color:#f59e0b">Moderate Traffic</span>' : '<span style="color:#10b981">Clear / Flowing</span>';
+            let statusText = loc.congestion === 3 ? '<span style="color:#ef4444">High Congestion</span>' : loc.congestion === 2 ? '<span style="color:#f59e0b">Moderate Traffic</span>' : '<span style="color:#10b981">Clear Flow</span>';
 
             marker.bindTooltip(`Loading...`, { direction: 'top', className: 'custom-tooltip' });
-            marker.on('click', () => map.flyTo(loc.coords, 6, { animate: true, duration: 1.5 }));
+            marker.on('click', () => map.flyTo(loc.coords, 5, { animate: true, duration: 1.2 }));
 
             const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${loc.coords[0]}&lon=${loc.coords[1]}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=en`;
             fetch(weatherUrl).then(response => response.json()).then(w => {
@@ -308,13 +324,13 @@
                 loc.weatherDesc = desc; 
                 
                 marker.setTooltipContent(`
-                    <div style="background:#0f172a; border:1px solid #334155; padding:12px; border-radius:8px; color:white; min-width: 160px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);">
-                        <b style="color:#e2e8f0; font-size:14px;">${loc.name}</b><br>
-                        <span style="font-size:10px; color:#94a3b8;">${loc.type}</span><br>
-                        <div style="margin:6px 0; font-size:11px;">Status: ${statusText}</div>
-                        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
-                            <div style="font-size: 16px; font-weight: bold;">${temp}°C</div>
-                            <div style="font-size: 10px; color:#fbbf24; text-align:right;">☁️ ${desc}</div>
+                    <div style="background:#0f172a; border:1px solid #334155; padding:12px; border-radius:6px; color:#f8fafc; min-width: 150px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); font-family: 'Inter', sans-serif;">
+                        <b style="font-size:13px; font-weight:600;">${loc.name}</b><br>
+                        <span style="font-size:9px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">${loc.type}</span>
+                        <div style="margin:8px 0; font-size:10px; border-bottom: 1px solid #1e293b; padding-bottom:6px;">Status: ${statusText}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size: 15px; font-weight: 700;">${temp}°C</div>
+                            <div style="font-size: 9px; color:#64748b; text-align:right;">☁️ ${desc}</div>
                         </div>
                     </div>
                 `);
@@ -329,16 +345,19 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        // MODÜL 1: CANLI GEMİ ANİMASYONU
         function animateCargoShip(startCoords, endCoords) {
             if(shipMarker) map.removeLayer(shipMarker);
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
 
-            const shipIcon = L.divIcon({ html: '🚢', className: 'text-2xl drop-shadow-md', iconSize: [30, 30], iconAnchor: [15, 15] });
+            // Daha temiz bir marker
+            const shipIcon = L.divIcon({ 
+                html: '<div style="background: white; border-radius: 50%; width: 10px; height: 10px; border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div>', 
+                className: '', iconSize: [10, 10], iconAnchor: [5, 5] 
+            });
             shipMarker = L.marker(startCoords, {icon: shipIcon, zIndexOffset: 1000}).addTo(map);
 
             let progress = 0;
-            const speed = 0.003; 
+            const speed = 0.002; 
 
             function move() {
                 progress += speed;
@@ -358,28 +377,29 @@
             const riskBox = document.getElementById('mainRiskBox');
             const altBtn = document.getElementById('altRouteBtn');
             
-            btn.innerText = "ANALYZING...";
+            btn.innerText = "Processing...";
+            btn.classList.add('opacity-80');
             sc.classList.remove('hidden');
             altBtn.classList.add('hidden');
             if(altRouteLine) map.removeLayer(altRouteLine);
             
             document.getElementById('riskVal').innerText = "...";
-            document.getElementById('riskStatus').innerText = "Fetching AI Data";
-            document.getElementById('financialLoss').innerText = "Calculating...";
-            document.getElementById('carbonFootprint').innerText = "Estimating...";
+            document.getElementById('riskStatus').innerText = "Querying Model";
+            document.getElementById('financialLoss').innerText = "Wait...";
+            document.getElementById('carbonFootprint').innerText = "Wait...";
             document.getElementById('etaDays').innerText = "...";
             document.getElementById('delayDays').innerText = "...";
 
             const sourceId = document.getElementById('sourceLoc').value;
             const targetId = document.getElementById('targetLoc').value;
-            const productCatEl = document.getElementById('productCat');
-            const productCat = productCatEl.value;
+            const productCat = document.getElementById('productCat').value;
             
             let cargoValue = productCat === "73" ? 500000 : productCat === "29" ? 300000 : productCat === "17" ? 120000 : productCat === "48" ? 80000 : 50000;
 
             if (sourceId === targetId) {
-                alert("Origin and Destination cannot be the same!");
-                btn.innerText = "CALCULATE ROUTE RISK";
+                alert("Origin and destination cannot be identical.");
+                btn.innerText = "Compute Risk Profile";
+                btn.classList.remove('opacity-80');
                 return;
             }
 
@@ -397,33 +417,32 @@
                 const data = await response.json();
                 const skor = data.risk_skoru;
                 
-                // Rota Çizimi
                 if(activeRouteLine) map.removeLayer(activeRouteLine);
-                const routeColor = skor > 60 ? '#dc2626' : skor > 35 ? '#f59e0b' : '#10b981';
-                activeRouteLine = L.polyline([source.coords, target.coords], { color: routeColor, weight: 3, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
+                const routeColor = skor > 60 ? '#ef4444' : skor > 35 ? '#f59e0b' : '#3b82f6';
+                activeRouteLine = L.polyline([source.coords, target.coords], { color: routeColor, weight: 2.5, opacity: 0.7, dashArray: '6, 8' }).addTo(map);
                 map.fitBounds(activeRouteLine.getBounds(), { padding: [50, 50] });
 
-                // Gemi Animasyonunu Başlat
                 animateCargoShip(source.coords, target.coords);
 
-                // UI Güncelleme
-                const bgClass = skor > 60 ? 'bg-red-900/30 border-red-500' : skor > 35 ? 'bg-orange-900/30 border-orange-500' : 'bg-emerald-900/30 border-emerald-500';
-                const textClass = skor > 60 ? 'text-red-500' : skor > 35 ? 'text-orange-500' : 'text-emerald-500';
+                // UI Renkleri (Daha mat)
+                const bgClass = skor > 60 ? 'bg-red-900/10 border-red-500/30' : skor > 35 ? 'bg-amber-900/10 border-amber-500/30' : 'bg-blue-900/10 border-blue-500/30';
+                const textClass = skor > 60 ? 'text-red-400' : skor > 35 ? 'text-amber-400' : 'text-blue-400';
                 
-                riskBox.className = `p-3 rounded-xl text-center border-2 transition-all duration-500 ${bgClass}`;
-                document.getElementById('riskVal').className = `text-4xl font-black ${textClass}`;
+                riskBox.className = `p-4 rounded-lg text-center border transition-all duration-500 shadow-inner ${bgClass}`;
+                document.getElementById('riskVal').className = `text-3xl font-bold tracking-tight ${textClass}`;
                 document.getElementById('riskVal').innerText = skor + '%';
-                document.getElementById('riskStatus').innerText = data["Tahmin Sonucu"];
-                document.getElementById('riskStatus').className = `text-sm font-bold uppercase mt-1 ${textClass}`;
+                
+                // Risk Metnini Temizle
+                let cleanStatus = data["Tahmin Sonucu"].replace(/🚨|⚠️|✅/g, '').trim();
+                document.getElementById('riskStatus').innerText = cleanStatus;
+                document.getElementById('riskStatus').className = `text-xs font-medium uppercase mt-1 ${textClass}`;
 
-                // Finansal & CO2 Hesaplama
                 let financialLoss = cargoValue * (skor / 100) * 0.15; 
                 if(skor > 80) financialLoss *= 1.5; 
                 const distanceKm = getDistance(source.coords[0], source.coords[1], target.coords[0], target.coords[1]);
                 const co2Emissions = distanceKm * 0.015;
 
-                // MODÜL 4: ETA & Gecikme Hesaplayıcı
-                const speedKmH = 40; // Gemi hızı
+                const speedKmH = 40; 
                 const baseDays = Math.ceil((distanceKm / speedKmH) / 24);
                 let delayDays = skor > 60 ? Math.floor(skor/10) : (skor > 35 ? 2 : 0);
 
@@ -433,100 +452,114 @@
                 
                 const delayEl = document.getElementById('delayDays');
                 delayEl.innerText = '+' + delayDays + ' Days';
-                delayEl.className = delayDays > 3 ? 'text-red-500 font-mono font-bold text-sm' : delayDays > 0 ? 'text-orange-500 font-mono font-bold text-sm' : 'text-emerald-500 font-mono font-bold text-sm';
+                delayEl.className = delayDays > 3 ? 'text-red-400 font-mono font-medium text-xs' : delayDays > 0 ? 'text-amber-400 font-mono font-medium text-xs' : 'text-emerald-400 font-mono font-medium text-xs';
 
-                // MODÜL 2: Alternatif Rota Butonu Gösterimi
                 if(skor > 60) {
                     altBtn.classList.remove('hidden');
                 }
 
-                // PDF için Data Kaydetme
                 currentReportData = {
-                    source: source.name, target: target.name, risk: skor + '%', status: data["Tahmin Sonucu"], 
+                    trackingId: 'HACI-' + Math.floor(Math.random() * 9000 + 1000),
+                    source: source.name, target: target.name, risk: skor + '%', status: cleanStatus, 
                     loss: '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0}),
                     co2: co2Emissions.toFixed(1) + ' Tons', eta: baseDays + delayDays + ' Days (inc. delay)'
                 };
 
+                const tbody = document.getElementById('liveShipmentsBody');
+                const statusHtml = skor > 60 ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">Delayed</span>' : skor > 35 ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Warning</span>' : '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">On Track</span>';
+
+                const newRow = `
+                    <tr class="hover:bg-slate-800/30 transition-colors border-b border-slate-800/50">
+                        <td class="py-3 px-6 font-mono text-slate-400 text-[11px]">${currentReportData.trackingId}</td>
+                        <td class="py-3 px-6 text-center text-slate-300 font-mono text-[11px]">$${(cargoValue/1000).toFixed(0)}k</td>
+                        <td class="py-3 px-6 text-[11px] text-slate-300">${source.name.split(',')[0]} <span class="text-slate-600 mx-1">→</span> ${target.name.split(',')[0]}</td>
+                        <td class="py-3 px-6 text-center">${statusHtml}</td>
+                        <td class="py-3 px-6 text-right font-mono font-medium text-[11px] ${textClass}">${skor.toFixed(1)}%</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('afterbegin', newRow);
+
             } catch (error) {
                 console.error(error);
-                riskBox.className = "p-3 rounded-xl text-center border-2 bg-red-900/30 border-red-600";
-                document.getElementById('riskVal').className = "text-2xl font-black text-red-500";
-                document.getElementById('riskVal').innerText = "API ERR";
+                riskBox.className = "p-4 rounded-lg text-center border bg-red-900/10 border-red-500/30 shadow-inner";
+                document.getElementById('riskVal').className = "text-3xl font-bold tracking-tight text-red-400";
+                document.getElementById('riskVal').innerText = "ERR";
+                document.getElementById('riskStatus').innerText = "API Offline";
             } finally {
-                btn.innerText = "CALCULATE ROUTE RISK";
+                btn.innerText = "Compute Risk Profile";
+                btn.classList.remove('opacity-80');
             }
         }
 
-        // MODÜL 2 DEVAMI: Alternatif Rota Bulucu
         function findAltRoute() {
             const sourceId = document.getElementById('sourceLoc').value;
             const targetId = document.getElementById('targetLoc').value;
             const source = locations.find(l => l.id === sourceId);
             const target = locations.find(l => l.id === targetId);
 
-            // Güvenli (Yeşil) olan rastgele bir "Transit" noktası bul
             const safePorts = locations.filter(l => l.congestion === 1 && l.id !== sourceId && l.id !== targetId);
             const transitNode = safePorts[Math.floor(Math.random() * safePorts.length)];
 
             if(altRouteLine) map.removeLayer(altRouteLine);
             
-            // İki aşamalı yeşil rota çiz
             altRouteLine = L.polyline([source.coords, transitNode.coords, target.coords], {
-                color: '#10b981', weight: 4, opacity: 0.9, dashArray: '5, 10'
+                color: '#10b981', weight: 2.5, opacity: 0.8, dashArray: '4, 6'
             }).addTo(map);
 
-            // Gemi Animasyonunu yeni rotaya çevir
             if(shipMarker) map.removeLayer(shipMarker);
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             
-            // Arayüzü "Güvenli" olarak güncelle
             const riskBox = document.getElementById('mainRiskBox');
-            riskBox.className = "p-3 rounded-xl text-center border-2 transition-all duration-500 bg-emerald-900/30 border-emerald-500";
-            document.getElementById('riskVal').className = "text-4xl font-black text-emerald-500";
-            document.getElementById('riskVal').innerText = "28%"; // Sahte düşük risk
-            document.getElementById('riskStatus').innerText = "SAFE REROUTED";
-            document.getElementById('riskStatus').className = "text-sm font-bold uppercase mt-1 text-emerald-500";
-            document.getElementById('delayDays').innerText = "0 Days";
-            document.getElementById('delayDays').className = "text-emerald-500 font-mono font-bold text-sm";
+            riskBox.className = "p-4 rounded-lg text-center border transition-all duration-500 shadow-inner bg-emerald-900/10 border-emerald-500/30";
+            document.getElementById('riskVal').className = "text-3xl font-bold tracking-tight text-emerald-400";
+            document.getElementById('riskVal').innerText = "28%"; 
+            document.getElementById('riskStatus').innerText = "REROUTED SAFE";
+            document.getElementById('riskStatus').className = "text-xs font-medium uppercase mt-1 text-emerald-400";
+            document.getElementById('delayDays').innerText = "+2 Days";
+            document.getElementById('delayDays').className = "text-amber-400 font-mono font-medium text-xs";
             
-            document.getElementById('altRouteBtn').classList.add('hidden'); // Butonu gizle
-            alert(`Rerouted successfully via ${transitNode.name}. Risk significantly reduced.`);
+            document.getElementById('altRouteBtn').classList.add('hidden');
+            
+            setTimeout(() => {
+                alert(`Optimization successful. Asset rerouted via ${transitNode.name} to avoid bottlenecks.`);
+            }, 500);
         }
 
-        // MODÜL 3: PDF Raporu Oluşturma
         function downloadPDF() {
             if(!currentReportData.source) {
-                alert("Lütfen önce bir risk analizi yapın.");
+                alert("Please compute a risk profile first.");
                 return;
             }
 
             const template = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; background: white;">
-                    <div style="border-bottom: 2px solid #10b981; padding-bottom: 10px; margin-bottom: 30px;">
-                        <h1 style="color: #0f172a; margin: 0; font-size: 28px;">HACI<span style="color:#10b981">.</span> Global Visibility Hub</h1>
-                        <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Supply Chain AI Assessment Report</p>
+                    <div style="border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-bottom: 30px;">
+                        <h1 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">HACI<span style="color:#3b82f6">.</span> Hub</h1>
+                        <p style="color: #64748b; margin: 5px 0 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Automated Risk Assessment Report</p>
                     </div>
                     
-                    <h2 style="font-size: 18px; color: #334155; margin-bottom: 20px;">Route Specifications</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                        <tr style="background: #f8fafc;"><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; width: 30%;">Origin</td><td style="padding: 10px; border: 1px solid #e2e8f0;">${currentReportData.source}</td></tr>
-                        <tr><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">Destination</td><td style="padding: 10px; border: 1px solid #e2e8f0;">${currentReportData.target}</td></tr>
+                    <h2 style="font-size: 14px; color: #475569; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Route Definition</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px;">
+                        <tr style="background: #f8fafc;"><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600; width: 35%; color:#64748b;">Origin</td><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 500;">${currentReportData.source}</td></tr>
+                        <tr><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600; color:#64748b;">Destination</td><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 500;">${currentReportData.target}</td></tr>
+                        <tr style="background: #f8fafc;"><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600; color:#64748b;">Tracking Ref</td><td style="padding: 12px; border: 1px solid #e2e8f0; font-family: monospace;">${currentReportData.trackingId}</td></tr>
                     </table>
 
-                    <h2 style="font-size: 18px; color: #334155; margin-bottom: 20px;">AI Risk Analysis</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                        <tr style="background: #f8fafc;"><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; width: 30%;">Risk Score</td><td style="padding: 10px; border: 1px solid #e2e8f0; color: #dc2626; font-weight: bold; font-size: 18px;">${currentReportData.risk} (${currentReportData.status})</td></tr>
-                        <tr><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">Est. Financial Risk</td><td style="padding: 10px; border: 1px solid #e2e8f0; color: #dc2626;">${currentReportData.loss}</td></tr>
+                    <h2 style="font-size: 14px; color: #475569; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">ML Risk Analysis</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px;">
+                        <tr style="background: #f8fafc;"><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600; width: 35%; color:#64748b;">Model Probability</td><td style="padding: 12px; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 700; font-size: 16px;">${currentReportData.risk} <span style="font-size:12px; font-weight:normal; color:#64748b;">(${currentReportData.status})</span></td></tr>
+                        <tr><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600; color:#64748b;">Financial Exposure</td><td style="padding: 12px; border: 1px solid #e2e8f0; font-family: monospace; font-weight: 600;">${currentReportData.loss}</td></tr>
                     </table>
 
-                    <h2 style="font-size: 18px; color: #334155; margin-bottom: 20px;">Logistics & ESG Metrics</h2>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr style="background: #f8fafc;"><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; width: 30%;">Est. Transit Time</td><td style="padding: 10px; border: 1px solid #e2e8f0;">${currentReportData.eta}</td></tr>
-                        <tr><td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">Carbon Footprint</td><td style="padding: 10px; border: 1px solid #e2e8f0; color: #10b981;">${currentReportData.co2}</td></tr>
+                    <h2 style="font-size: 14px; color: #475569; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Logistics & ESG Metrics</h2>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <tr style="background: #f8fafc;"><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600; width: 35%; color:#64748b;">Estimated Transit</td><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 500;">${currentReportData.eta}</td></tr>
+                        <tr><td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600; color:#64748b;">Carbon Footprint</td><td style="padding: 12px; border: 1px solid #e2e8f0; color: #10b981; font-weight: 600;">${currentReportData.co2}</td></tr>
                     </table>
                     
-                    <div style="margin-top: 50px; font-size: 11px; color: #94a3b8; text-align: center;">
-                        Generated automatically by Haci Global Hub AI Model. Confidential document.
+                    <div style="margin-top: 60px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center;">
+                        This document was generated automatically by the Haci Global Visibility ML Engine.<br>
+                        Confidential and proprietary information.
                     </div>
                 </div>
             `;
@@ -536,8 +569,8 @@
             pdfDiv.style.display = 'block';
 
             html2pdf().from(pdfDiv).set({
-                margin: 1,
-                filename: `Haci_RiskReport_${currentReportData.trackingId || 'Logistics'}.pdf`,
+                margin: 0.5,
+                filename: `${currentReportData.trackingId}_RiskProfile.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
