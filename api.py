@@ -17,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Modeli ve Veriyi Yükle
 model = joblib.load('haci_risk_model.joblib')
 
 df_raw = pd.read_csv('DataCoSupplyChainDataset.csv', encoding='latin1')
@@ -30,15 +31,15 @@ kategorik_sutunlar = X_clean.select_dtypes(include=['object']).columns.tolist()
 X_clean[kategorik_sutunlar] = X_clean[kategorik_sutunlar].fillna("Unknown")
 X_clean = X_clean.fillna(0)
 
-# Veriyi modelin anladığı şekle çevir (Orijinal çalışan yöntem)
+# Tüm kategorik verileri rakama çevir
 for col in kategorik_sutunlar:
     le = LabelEncoder()
     X_clean[col] = le.fit_transform(X_clean[col].astype(str))
 
-# Şablonu çıkar (Sadece orijinal sütunlar var, dışarıdan Shipping_Mode gelmeyecek)
-X_sablon = X_clean.iloc[[0]].copy()
+# Şablonu çıkar ve TÜMÜNÜ FLOAT YAP (CatBoost hatasının kesin çözümü)
+X_sablon = X_clean.iloc[[0]].copy().astype(float)
 for col in X_clean.columns:
-    X_sablon[col] = X_clean[col].median()
+    X_sablon[col] = float(X_clean[col].median())
 
 @app.get("/")
 def home():
@@ -48,26 +49,25 @@ def home():
 def risk_tahmin_et(veri: dict):
     test_verisi = X_sablon.copy()
     
-    # Sadece Şehir ve Kategoriyi al, Shipping_Mode'u sildik!
-    sutun_eslesmeleri = {
-        "Order_City": "Order City", 
-        "Category_Id": "Category Id"
-    }
+    # Gelen verileri zorla FLOAT olarak şablona yaz
+    test_verisi["Order City"] = float(veri.get("Order_City", test_verisi["Order City"].values[0]))
+    test_verisi["Category Id"] = float(veri.get("Category_Id", test_verisi["Category Id"].values[0]))
     
-    for frontend_key, dataset_key in sutun_eslesmeleri.items():
-        if frontend_key in veri and dataset_key in test_verisi.columns:
-            test_verisi[dataset_key] = float(veri[frontend_key])
+    # Shipping Mode hatasını önlemek için manuel 3.0 (Standard) veriyoruz
+    test_verisi["Shipping Mode"] = 3.0
 
     try:
+        # Zırhlı tahmin bloğu
         olasiliklar = model.predict_proba(test_verisi)[0]
         risk = float(olasiliklar[1] * 100)
-    except AttributeError:
+    except Exception as e:
+        # Çökerse bile düz tahmin yapıp devam eder
         tahmin = model.predict(test_verisi)
         risk = 85.0 if tahmin[0] == 1 else 15.0
 
     w_desc = veri.get("weather_desc", "").lower()
     
-    # Hava durumu düzeltmesi
+    # Hava Durumu Algoritması
     if any(x in w_desc for x in ["yağmur", "fırtına", "kar", "rain", "storm", "snow"]):
         risk = min(risk + 25.0, 98.5)
     elif any(x in w_desc for x in ["kapalı", "bulutlu", "clouds", "overcast"]):
