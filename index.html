@@ -52,15 +52,15 @@
         <div class="p-6 pb-4">
             <h1 class="text-3xl font-extrabold tracking-tight text-white mb-6">Haci<span class="text-blue-500">.</span></h1>
             <nav class="space-y-1.5" id="sidebarMenu">
-                <a href="#" onclick="switchView('dashboardView', this)" class="menu-item active-menu flex items-center py-2.5 px-4 rounded-lg text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                <button onclick="switchView('dashboardView', this)" class="menu-item active-menu w-full flex items-center py-2.5 px-4 rounded-lg text-sm text-left transition hover:text-white hover:bg-slate-800">
                     <span class="mr-3 opacity-80">📊</span> Dashboard
-                </a>
-                <a href="#" onclick="switchView('shipmentsView', this)" class="menu-item flex items-center py-2.5 px-4 rounded-lg text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                </button>
+                <button onclick="switchView('shipmentsView', this)" class="menu-item w-full flex items-center py-2.5 px-4 rounded-lg text-sm text-left transition text-slate-400 hover:text-white hover:bg-slate-800">
                     <span class="mr-3 opacity-80">🚢</span> Live Transits
-                </a>
-                <a href="#" onclick="switchView('riskCenterView', this)" class="menu-item flex items-center py-2.5 px-4 rounded-lg text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                </button>
+                <button onclick="switchView('riskCenterView', this)" class="menu-item w-full flex items-center py-2.5 px-4 rounded-lg text-sm text-left transition text-slate-400 hover:text-white hover:bg-slate-800">
                     <span class="mr-3 opacity-80">🛡️</span> Analytics
-                </a>
+                </button>
             </nav>
         </div>
         
@@ -268,59 +268,59 @@
     <div id="pdfTemplate" style="display: none;"></div>
 
     <script>
-        // TÜM JAVASCRIPT GÜVENLİK KORUMASI ALTINDA LOAD EDİLİYOR
+        // TÜM JAVASCRIPT GLOBAL ALANDAN KORUMAYA ALINDI VE WINDOW LOAD İLE TETİKLENİYOR
+        let activeRouteLine = null, altRouteLine = null, shipMarker = null, animationFrameId = null;
+        let weatherRadarLayer = null, isRadarOn = false;
+        let totalAiSavings = 0;
+        let currentReportData = {};
+        let chartInstances = {};
+        let statsData = { safe: 0, warning: 0, critical: 0, co2History: [] };
+        let map = null;
+
+        const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
+        const carriers = ["Maersk Line", "Hapag-Lloyd", "Evergreen", "MSC", "CMA CGM", "COSCO"];
+
+        const locations = [
+            { id: "USLAX", cityId: 453, name: "Los Angeles, US", coords: [33.77, -118.19], type: "Mega Port", congestion: 2, region: "America" },
+            { id: "USNYC", cityId: 468, name: "New York, US", coords: [40.71, -74.00], type: "East Coast Hub", congestion: 1, region: "America" },
+            { id: "USMIA", cityId: 469, name: "Miami, US", coords: [25.76, -80.19], type: "Gateway Port", congestion: 1, region: "America" },
+            { id: "GBHOU", cityId: 461, name: "Houston, US", coords: [29.76, -95.36], type: "Gulf Port", congestion: 1, region: "America" },
+            { id: "PAPAN", cityId: 458, name: "Panama Canal, PA", coords: [9.14, -79.73], type: "Critical Transit", congestion: 3, region: "America" },
+            { id: "BRRIO", cityId: 466, name: "Rio de Janeiro, BR", coords: [-22.90, -43.17], type: "South America Hub", congestion: 2, region: "America" },
+            { id: "BRSSZ", cityId: 470, name: "Santos, BR", coords: [-23.96, -46.33], type: "LatAm Mega Port", congestion: 2, region: "America" },
+            { id: "MXVER", cityId: 471, name: "Veracruz, MX", coords: [19.17, -96.13], type: "Regional Hub", congestion: 1, region: "America" },
+            { id: "NLRTM", cityId: 452, name: "Rotterdam, NL", coords: [51.92, 4.47], type: "Europe Hub", congestion: 1, region: "Europe" },
+            { id: "DEHAM", cityId: 455, name: "Hamburg, DE", coords: [53.55, 9.99], type: "Mega Port", congestion: 1, region: "Europe" },
+            { id: "GBLON", cityId: 467, name: "London Gateway, UK", coords: [51.50, -0.12], type: "UK Hub", congestion: 1, region: "Europe" },
+            { id: "BEANT", cityId: 472, name: "Antwerp, BE", coords: [51.21, 4.40], type: "Major Port", congestion: 2, region: "Europe" },
+            { id: "ESVLC", cityId: 473, name: "Valencia, ES", coords: [39.46, -0.37], type: "Med Hub", congestion: 1, region: "Europe" },
+            { id: "FRBCN", cityId: 474, name: "Barcelona, ES", coords: [41.38, 2.16], type: "Med Hub", congestion: 1, region: "Europe" },
+            { id: "TRIST", cityId: 459, name: "Ambarli, TR", coords: [40.97, 28.68], type: "Main Port", congestion: 1, region: "Europe" },
+            { id: "TRBUR", cityId: 460, name: "Bursa (BTU Hub), TR", coords: [40.18, 29.06], type: "Regional Center", congestion: 1, region: "Europe" },
+            { id: "TRMER", cityId: 475, name: "Mersin, TR", coords: [36.80, 34.62], type: "East Med Hub", congestion: 1, region: "Europe" },
+            { id: "GRPIR", cityId: 476, name: "Piraeus, GR", coords: [37.94, 23.64], type: "Transshipment Hub", congestion: 2, region: "Europe" },
+            { id: "EGSUZ", cityId: 457, name: "Suez Canal, EG", coords: [30.58, 32.26], type: "Critical Transit", congestion: 3, region: "Africa" },
+            { id: "AEJEA", cityId: 454, name: "Jebel Ali, AE", coords: [24.98, 55.06], type: "Middle East Hub", congestion: 1, region: "Asia" },
+            { id: "ZACPT", cityId: 465, name: "Cape Town, ZA", coords: [-33.92, 18.42], type: "Africa Hub", congestion: 1, region: "Africa" },
+            { id: "ZADUR", cityId: 477, name: "Durban, ZA", coords: [-29.85, 31.02], type: "Major Port", congestion: 2, region: "Africa" },
+            { id: "SADMM", cityId: 478, name: "Dammam, SA", coords: [26.42, 50.10], type: "Gulf Hub", congestion: 1, region: "Asia" },
+            { id: "MAORN", cityId: 479, name: "Strait of Hormuz", coords: [26.56, 56.25], type: "Chokepoint", congestion: 3, region: "Asia" },
+            { id: "CNSHA", cityId: 450, name: "Shanghai Port, CN", coords: [31.23, 121.47], type: "Mega Port", congestion: 3, region: "Asia" },
+            { id: "SGSIN", cityId: 451, name: "Singapore Port, SG", coords: [1.29, 103.85], type: "Mega Port", congestion: 2, region: "Asia" },
+            { id: "KRPUS", cityId: 456, name: "Busan, KR", coords: [35.17, 129.07], type: "Asia Hub", congestion: 1, region: "Asia" },
+            { id: "JPTYO", cityId: 462, name: "Tokyo, JP", coords: [35.67, 139.65], type: "Asia Hub", congestion: 1, region: "Asia" },
+            { id: "INBOM", cityId: 463, name: "Mumbai, IN", coords: [18.93, 72.82], type: "Subcontinent Hub", congestion: 2, region: "Asia" },
+            { id: "HKHKG", cityId: 480, name: "Hong Kong, HK", coords: [22.31, 114.16], type: "Major Port", congestion: 2, region: "Asia" },
+            { id: "TWTPE", cityId: 481, name: "Taipei, TW", coords: [25.03, 121.56], type: "Regional Hub", congestion: 1, region: "Asia" },
+            { id: "VNSGN", cityId: 482, name: "Ho Chi Minh, VN", coords: [10.82, 106.62], type: "Emerging Hub", congestion: 2, region: "Asia" },
+            { id: "MYPKG", cityId: 483, name: "Port Klang, MY", coords: [3.00, 101.39], type: "Transshipment Hub", congestion: 1, region: "Asia" },
+            { id: "AUSYD", cityId: 464, name: "Sydney, AU", coords: [-33.86, 151.20], type: "Oceania Hub", congestion: 1, region: "Oceania" },
+            { id: "AUMEL", cityId: 484, name: "Melbourne, AU", coords: [-37.81, 144.96], type: "Major Port", congestion: 1, region: "Oceania" }
+        ];
+
         window.onload = function() {
-            console.log("🟢 HACI SYSTEM V4 CORE INITIALIZED SAFELY!");
+            console.log("🟢 HACI SYSTEM V4 PRO EXECUTION INITIALIZED!");
 
-            const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
-            let activeRouteLine = null, altRouteLine = null, shipMarker = null, animationFrameId = null;
-            let weatherRadarLayer = null, isRadarOn = false;
-            let totalAiSavings = 0;
-            let currentReportData = {};
-            let chartInstances = {};
-            let statsData = { safe: 0, warning: 0, critical: 0, co2History: [] };
-            const carriers = ["Maersk Line", "Hapag-Lloyd", "Evergreen", "MSC", "CMA CGM", "COSCO"];
-
-            // 35 STRATEJİK LOKASYON VERİSİ
-            const locations = [
-                { id: "USLAX", cityId: 453, name: "Los Angeles, US", coords: [33.77, -118.19], type: "Mega Port", congestion: 2, region: "America" },
-                { id: "USNYC", cityId: 468, name: "New York, US", coords: [40.71, -74.00], type: "East Coast Hub", congestion: 1, region: "America" },
-                { id: "USMIA", cityId: 469, name: "Miami, US", coords: [25.76, -80.19], type: "Gateway Port", congestion: 1, region: "America" },
-                { id: "GBHOU", cityId: 461, name: "Houston, US", coords: [29.76, -95.36], type: "Gulf Port", congestion: 1, region: "America" },
-                { id: "PAPAN", cityId: 458, name: "Panama Canal, PA", coords: [9.14, -79.73], type: "Critical Transit", congestion: 3, region: "America" },
-                { id: "BRRIO", cityId: 466, name: "Rio de Janeiro, BR", coords: [-22.90, -43.17], type: "South America Hub", congestion: 2, region: "America" },
-                { id: "BRSSZ", cityId: 470, name: "Santos, BR", coords: [-23.96, -46.33], type: "LatAm Mega Port", congestion: 2, region: "America" },
-                { id: "MXVER", cityId: 471, name: "Veracruz, MX", coords: [19.17, -96.13], type: "Regional Hub", congestion: 1, region: "America" },
-                { id: "NLRTM", cityId: 452, name: "Rotterdam, NL", coords: [51.92, 4.47], type: "Europe Hub", congestion: 1, region: "Europe" },
-                { id: "DEHAM", cityId: 455, name: "Hamburg, DE", coords: [53.55, 9.99], type: "Mega Port", congestion: 1, region: "Europe" },
-                { id: "GBLON", cityId: 467, name: "London Gateway, UK", coords: [51.50, -0.12], type: "UK Hub", congestion: 1, region: "Europe" },
-                { id: "BEANT", cityId: 472, name: "Antwerp, BE", coords: [51.21, 4.40], type: "Major Port", congestion: 2, region: "Europe" },
-                { id: "ESVLC", cityId: 473, name: "Valencia, ES", coords: [39.46, -0.37], type: "Med Hub", congestion: 1, region: "Europe" },
-                { id: "FRBCN", cityId: 474, name: "Barcelona, ES", coords: [41.38, 2.16], type: "Med Hub", congestion: 1, region: "Europe" },
-                { id: "TRIST", cityId: 459, name: "Ambarli, TR", coords: [40.97, 28.68], type: "Main Port", congestion: 1, region: "Europe" },
-                { id: "TRBUR", cityId: 460, name: "Bursa (BTU Hub), TR", coords: [40.18, 29.06], type: "Regional Center", congestion: 1, region: "Europe" },
-                { id: "TRMER", cityId: 475, name: "Mersin, TR", coords: [36.80, 34.62], type: "East Med Hub", congestion: 1, region: "Europe" },
-                { id: "GRPIR", cityId: 476, name: "Piraeus, GR", coords: [37.94, 23.64], type: "Transshipment Hub", congestion: 2, region: "Europe" },
-                { id: "EGSUZ", cityId: 457, name: "Suez Canal, EG", coords: [30.58, 32.26], type: "Critical Transit", congestion: 3, region: "Africa" },
-                { id: "AEJEA", cityId: 454, name: "Jebel Ali, AE", coords: [24.98, 55.06], type: "Middle East Hub", congestion: 1, region: "Asia" },
-                { id: "ZACPT", cityId: 465, name: "Cape Town, ZA", coords: [-33.92, 18.42], type: "Africa Hub", congestion: 1, region: "Africa" },
-                { id: "ZADUR", cityId: 477, name: "Durban, ZA", coords: [-29.85, 31.02], type: "Major Port", congestion: 2, region: "Africa" },
-                { id: "SADMM", cityId: 478, name: "Dammam, SA", coords: [26.42, 50.10], type: "Gulf Hub", congestion: 1, region: "Asia" },
-                { id: "MAORN", cityId: 479, name: "Strait of Hormuz", coords: [26.56, 56.25], type: "Chokepoint", congestion: 3, region: "Asia" },
-                { id: "CNSHA", cityId: 450, name: "Shanghai Port, CN", coords: [31.23, 121.47], type: "Mega Port", congestion: 3, region: "Asia" },
-                { id: "SGSIN", cityId: 451, name: "Singapore Port, SG", coords: [1.29, 103.85], type: "Mega Port", congestion: 2, region: "Asia" },
-                { id: "KRPUS", cityId: 456, name: "Busan, KR", coords: [35.17, 129.07], type: "Asia Hub", congestion: 1, region: "Asia" },
-                { id: "JPTYO", cityId: 462, name: "Tokyo, JP", coords: [35.67, 139.65], type: "Asia Hub", congestion: 1, region: "Asia" },
-                { id: "INBOM", cityId: 463, name: "Mumbai, IN", coords: [18.93, 72.82], type: "Subcontinent Hub", congestion: 2, region: "Asia" },
-                { id: "HKHKG", cityId: 480, name: "Hong Kong, HK", coords: [22.31, 114.16], type: "Major Port", congestion: 2, region: "Asia" },
-                { id: "TWTPE", cityId: 481, name: "Taipei, TW", coords: [25.03, 121.56], type: "Regional Hub", congestion: 1, region: "Asia" },
-                { id: "VNSGN", cityId: 482, name: "Ho Chi Minh, VN", coords: [10.82, 106.62], type: "Emerging Hub", congestion: 2, region: "Asia" },
-                { id: "MYPKG", cityId: 483, name: "Port Klang, MY", coords: [3.00, 101.39], type: "Transshipment Hub", congestion: 1, region: "Asia" },
-                { id: "AUSYD", cityId: 464, name: "Sydney, AU", coords: [-33.86, 151.20], type: "Oceania Hub", congestion: 1, region: "Oceania" },
-                { id: "AUMEL", cityId: 484, name: "Melbourne, AU", coords: [-37.81, 144.96], type: "Major Port", congestion: 1, region: "Oceania" }
-            ];
-
-            // SELECTION MENU BINDING
             const sourceSelect = document.getElementById('sourceLoc');
             const targetSelect = document.getElementById('targetLoc');
             if(sourceSelect && targetSelect) {
@@ -332,13 +332,11 @@
                 targetSelect.value = "NLRTM";
             }
 
-            // LEAFLET MAP CONFIG
-            const map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
+            map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
             fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
                 .then(res => res.json())
                 .then(data => L.geoJSON(data, { style: { color: '#334155', weight: 1, fillColor: '#1e293b', fillOpacity: 1 } }).addTo(map));
 
-            // AURA MARKER DEPLOYMENT
             locations.forEach(loc => {
                 let auraClass = loc.congestion === 3 ? 'port-aura-red' : loc.congestion === 2 ? 'port-aura-yellow' : 'port-aura-green';
                 const customIcon = L.divIcon({ className: 'custom-radar-icon', html: `<div class="${auraClass}" style="width: 12px; height: 12px;"></div>`, iconSize: [12, 12], iconAnchor: [6, 6] });
@@ -363,221 +361,275 @@
                     `);
                 }).catch(e => console.log(e));
             });
-
-            // DENİZ ROTASI WAYPOINT HESAPLAMA MOTORU 🚢
-            function getRouteCoords(source, target, isCrisis = false) {
-                if (isCrisis && ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia'))) {
-                    // Süveyş krizinde Ümit Burnu (Cape Town) üzerinden dolan
-                    const cape = locations.find(l=>l.id==="ZACPT").coords;
-                    return [source.coords, cape, target.coords];
-                }
-                if ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia')) {
-                    // Asya-Avrupa normal deniz rotası Süveyş'ten geçer
-                    const suez = locations.find(l=>l.id==="EGSUZ").coords;
-                    return [source.coords, suez, target.coords];
-                }
-                return [source.coords, target.coords];
-            }
-
-            // ÇOKLU NOKTA DENİZ ANİMASYONU 🌊
-            function animateCargoShip(routePoints, color='#3b82f6') {
-                if(shipMarker) map.removeLayer(shipMarker);
-                if(animationFrameId) cancelAnimationFrame(animationFrameId);
-                
-                const shipIcon = L.divIcon({ html: `<div style="background: white; border-radius: 50%; width: 8px; height: 8px; border: 2px solid ${color}; box-shadow: 0 0 8px ${color};"></div>`, className: '', iconSize: [8, 8], iconAnchor: [4, 4] });
-                shipMarker = L.marker(routePoints[0], {icon: shipIcon, zIndexOffset: 1000}).addTo(map);
-                
-                let segment = 0; let progress = 0;
-                function move() {
-                    progress += 0.004;
-                    if (progress > 1) { segment++; progress = 0; }
-                    if (segment < routePoints.length - 1) {
-                        const p1 = routePoints[segment]; const p2 = routePoints[segment + 1];
-                        shipMarker.setLatLng([p1[0] + (p2[0] - p1[0]) * progress, p1[1] + (p2[1] - p1[1]) * progress]);
-                        animationFrameId = requestAnimationFrame(move);
-                    }
-                }
-                move();
-            }
-
-            // GÜVENLİ CORES / FONKSİYON BAĞLAMLARI
-            window.riskiHesapla = async function() {
-                const btn = document.getElementById('calcBtn');
-                const sc = document.getElementById('sonucEkrani');
-                const riskBox = document.getElementById('mainRiskBox');
-                const altBtn = document.getElementById('altRouteBtn');
-                
-                if(!btn || !sc || !riskBox) return;
-
-                btn.disabled = true; btn.innerText = "Processing...";
-                sc.classList.remove('hidden'); if(altBtn) altBtn.classList.add('hidden');
-                
-                if(activeRouteLine) map.removeLayer(activeRouteLine);
-                if(altRouteLine) map.removeLayer(altRouteLine);
-
-                const source = locations.find(l => l.id === document.getElementById('sourceLoc').value);
-                const target = locations.find(l => l.id === document.getElementById('targetLoc').value);
-                const productCat = document.getElementById('productCat').value;
-                const crisis = document.getElementById('crisisSim').value;
-                const isEcoMode = document.getElementById('ecoToggle').checked;
-
-                let cargoValue = productCat === "73" ? 500000 : productCat === "29" ? 300000 : productCat === "17" ? 120000 : productCat === "48" ? 80000 : 50000;
-                const randomCarrier = carriers[Math.floor(Math.random() * carriers.length)];
-
-                printTerminal(`Analyzing risk metric for corridor: ${source.id} → ${target.id}`, "info");
-
-                try {
-                    const response = await fetch('https://global-risk.onrender.com/tahmin_et', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ "Order_City": target.cityId, "Category_Id": parseFloat(productCat), "weather_desc": target.weatherDesc })
-                    });
-                    const data = await response.json();
-                    
-                    let skor = data.risk_skoru;
-                    let cleanStatus = data["Tahmin Sonucu"].replace(/🚨|⚠️|✅/g, '').trim();
-                    let isRerouted = false;
-                    let extraDelay = 0;
-                    let distanceKm = getDistance(source.coords[0], source.coords[1], target.coords[0], target.coords[1]);
-                    let co2Emissions = distanceKm * 0.015;
-                    let speedKmH = 40;
-
-                    if (crisis === 'suez' && ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia'))) {
-                        skor = 94.5; cleanStatus = "CRITICAL: SUEZ BLOCKED"; extraDelay = 14; isRerouted = true; distanceKm += 4500;
-                        printTerminal("Suez Canal congestion threshold breached. Forcing alternative maritime arc.", "error");
-                    } else if (crisis === 'storm' && (source.region === 'Asia' || target.region === 'Asia')) {
-                        skor = Math.min(skor + 42, 97.8); cleanStatus = "METEOROLOGICAL ANOMALY"; extraDelay = 5;
-                        printTerminal("Severe Pacific system detected. Transit capability downgraded.", "error");
-                    }
-
-                    if(isEcoMode && !isRerouted) {
-                        skor = Math.max(10, skor * 0.55); co2Emissions *= 0.35; speedKmH = 20;
-                        cleanStatus = "OPTIMIZED ECO-TRACK";
-                        printTerminal("Eco-routing flag enabled. Slow-steaming protocol initiated.", "success");
-                    }
-
-                    const baseDays = Math.ceil((distanceKm / speedKmH) / 24);
-                    let delayDays = (skor > 60 ? Math.floor(skor/10) : (skor > 35 ? 2 : 0)) + extraDelay;
-                    let financialLoss = cargoValue * (skor / 100) * 0.12;
-
-                    currentReportData.currentLoss = financialLoss;
-
-                    const routePoints = getRouteCoords(source, target, isRerouted);
-                    const routeColor = isEcoMode ? '#10b981' : (skor > 60 ? '#ef4444' : skor > 35 ? '#f59e0b' : '#3b82f6');
-                    
-                    activeRouteLine = L.polyline(routePoints, { color: routeColor, weight: 2.5, opacity: 0.7, dashArray: '6, 8' }).addTo(map);
-                    map.fitBounds(activeRouteLine.getBounds(), { padding: [40, 40] });
-                    animateCargoShip(routePoints, routeColor);
-
-                    // DOM UPDATE WITH SAFETY GUARDS
-                    document.getElementById('riskVal').innerText = skor.toFixed(1) + '%';
-                    document.getElementById('riskVal').className = `text-3xl font-black ${skor > 60 ? 'text-red-400' : 'text-blue-400'}`;
-                    document.getElementById('riskStatus').innerText = cleanStatus;
-                    
-                    document.getElementById('financialLoss').innerText = '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0});
-                    document.getElementById('carbonFootprint').innerText = co2Emissions.toFixed(1) + ' T';
-                    document.getElementById('etaDays').innerText = baseDays + ' Days';
-                    document.getElementById('delayDays').innerText = '+' + delayDays + ' Days';
-
-                    if(skor > 60 && !isEcoMode && altBtn) altBtn.classList.remove('hidden');
-
-                    if(skor > 60) statsData.critical++; else if (skor > 35) statsData.warning++; else statsData.safe++;
-                    statsData.co2History.push(Math.round(co2Emissions));
-
-                    // LIVE TABLE INSERTION
-                    const tbody = document.getElementById('liveShipmentsBody');
-                    if(tbody) {
-                        tbody.insertAdjacentHTML('afterbegin', `
-                            <tr class="hover:bg-slate-800/30 transition-colors border-b border-slate-800/50">
-                                <td class="py-3 px-6 font-mono text-slate-400">${'HACI-' + Math.floor(Math.random()*9000+1000)}</td>
-                                <td class="py-3 px-6 text-center text-slate-300 font-mono">$${(cargoValue/1000).toFixed(0)}k</td>
-                                <td class="py-3 px-6">${source.id} → ${target.id}</td>
-                                <td class="py-3 px-6 text-center text-[10px] text-slate-400 font-semibold">${randomCarrier}</td>
-                                <td class="py-3 px-6 text-right font-mono font-medium ${skor > 60 ? 'text-red-400' : 'text-blue-400'}">${skor.toFixed(1)}%</td>
-                            </tr>
-                        `);
-                    }
-
-                    currentReportData = { trackingId: 'HACI-' + Math.floor(Math.random() * 9000 + 1000), source: source.name, target: target.name, risk: skor.toFixed(1) + '%', status: cleanStatus, loss: '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0}), co2: co2Emissions.toFixed(1) + ' Tons', eta: baseDays + delayDays + ' Days', carrier: randomCarrier };
-                    switchTab('summary');
-                    printTerminal("Predictive tracking state synchronized successfully.", "success");
-
-                } catch(err) {
-                    console.error(err);
-                    printTerminal("Pipeline error: Remote model unreachable.", "error");
-                } finally {
-                    btn.disabled = false; btn.innerText = "Execute Assessment"; btn.classList.remove('opacity-80');
-                }
-            };
-
-            window.findAltRoute = function() {
-                const source = locations.find(l => l.id === document.getElementById('sourceLoc').value);
-                const target = locations.find(l => l.id === document.getElementById('targetLoc').value);
-                const safePorts = locations.filter(l => l.congestion === 1 && l.id !== source.id && l.id !== target.id);
-                const transit = safePorts[Math.floor(Math.random() * safePorts.length)];
-
-                printTerminal(`Mitigation engine engaged. Rerouting via safe matrix node: ${transit.id}`, "info");
-
-                if(altRouteLine) map.removeLayer(altRouteLine);
-                const altPoints = [source.coords, transit.coords, target.coords];
-                altRouteLine = L.polyline(altPoints, { color: '#10b981', weight: 2.5, opacity: 0.8, dashArray: '4, 6' }).addTo(map);
-                animateCargoShip(altPoints, '#10b981');
-
-                setTimeout(() => {
-                    document.getElementById('riskVal').innerText = "24.5%";
-                    document.getElementById('riskStatus').innerText = "REROUTED GEOFENCE";
-                    document.getElementById('riskStatus').className = "text-xs font-bold uppercase mt-1 text-emerald-400";
-                    
-                    let saved = currentReportData.currentLoss * 0.7;
-                    totalAiSavings += saved;
-                    document.getElementById('roiCounterContainer').classList.remove('hidden');
-                    document.getElementById('roiValue').innerText = '$' + totalAiSavings.toLocaleString('en-US', {maximumFractionDigits:0});
-                    
-                    printTerminal(`Reroute verified. Mitigated financial damage: $${saved.toLocaleString()}`, "success");
-                    document.getElementById('altRouteBtn').classList.add('hidden');
-                }, 800);
-            };
-
-            window.toggleWeatherRadar = toggleWeatherRadar;
-            window.switchView = switchView;
-            window.switchTab = switchTab;
-            
-            // GLOBAL ANALYTICS INITIALIZATION
-            window.updateCharts = function() {
-                if(!document.getElementById('dynamicRiskChart')) return;
-                if(chartInstances.risk) chartInstances.risk.destroy();
-                if(chartInstances.co2) chartInstances.co2.destroy();
-                let s = statsData.safe || 4; let w = statsData.warning || 2; let c = statsData.critical || 1;
-                let h = statsData.co2History.length > 0 ? statsData.co2History : [180, 310, 140, 290];
-
-                chartInstances.risk = new Chart(document.getElementById('dynamicRiskChart').getContext('2d'), {
-                    type: 'doughnut', data: { labels: ['Safe', 'Warning', 'Critical'], datasets: [{ data: [s, w, c], backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }, cutout: '75%' }
-                });
-
-                chartInstances.co2 = new Chart(document.getElementById('dynamicCo2Chart').getContext('2d'), {
-                    type: 'bar', data: { labels: h.map((_, i) => 'Leg ' + (i+1)), datasets: [{ label: 'CO2 Tons', data: h, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: '#3b82f6', borderWidth: 1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } }, plugins: { legend: { display: false } } }
-                });
-            };
-
-            window.downloadPDF = function() {
-                if(!currentReportData.source) return;
-                const template = `
-                    <div style="padding: 40px; color: #1e293b; background: white;">
-                        <h1 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 800;">HACI<span style="color:#3b82f6">.</span> Hub Analytics Report</h1>
-                        <hr style="margin: 20px 0; border: 1px solid #e2e8f0;"/>
-                        <h3>Route Definition</h3>
-                        <p><b>Origin:</b> ${currentReportData.source} | <b>Destination:</b> ${currentReportData.target}</p>
-                        <p><b>Assigned Fleet Unit:</b> ${currentReportData.carrier} | <b>Ref:</b> ${currentReportData.trackingId}</p>
-                        <h3>Risk & ESG Diagnostics</h3>
-                        <p><b>ML Variance Probability:</b> ${currentReportData.risk} (${currentReportData.status})</p>
-                        <p><b>Exposure Vector:</b> ${currentReportData.loss} | <b>Carbon Cost:</b> ${currentReportData.co2}</p>
-                    </div>`;
-                const pdfDiv = document.getElementById('pdfTemplate');
-                pdfDiv.innerHTML = template; pdfDiv.style.display = 'block';
-                html2pdf().from(pdfDiv).set({ margin: 0.5, filename: `${currentReportData.trackingId}_Report.pdf`, html2canvas: { scale: 2 } }).save().then(() => pdfDiv.style.display = 'none');
-            };
         };
+
+        function getRouteCoords(source, target, isCrisis = false) {
+            if (isCrisis && ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia'))) {
+                const cape = locations.find(l=>l.id==="ZACPT").coords;
+                return [source.coords, cape, target.coords];
+            }
+            if ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia')) {
+                const suez = locations.find(l=>l.id==="EGSUZ").coords;
+                return [source.coords, suez, target.coords];
+            }
+            return [source.coords, target.coords];
+        }
+
+        function animateCargoShip(routePoints, color='#3b82f6') {
+            if(shipMarker) map.removeLayer(shipMarker);
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            const shipIcon = L.divIcon({ html: `<div style="background: white; border-radius: 50%; width: 8px; height: 8px; border: 2px solid ${color}; box-shadow: 0 0 8px ${color};"></div>`, className: '', iconSize: [8, 8], iconAnchor: [4, 4] });
+            shipMarker = L.marker(routePoints[0], {icon: shipIcon, zIndexOffset: 1000}).addTo(map);
+            
+            let segment = 0; let progress = 0;
+            function move() {
+                progress += 0.004;
+                if (progress > 1) { segment++; progress = 0; }
+                if (segment < routePoints.length - 1) {
+                    const p1 = routePoints[segment]; const p2 = routePoints[segment + 1];
+                    shipMarker.setLatLng([p1[0] + (p2[0] - p1[0]) * progress, p1[1] + (p2[1] - p1[1]) * progress]);
+                    animationFrameId = requestAnimationFrame(move);
+                }
+            }
+            move();
+        }
+
+        function toggleWeatherRadar() {
+            const btn = document.getElementById('radarBtn');
+            if(!isRadarOn) {
+                weatherRadarLayer = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`, { maxZoom: 18, opacity: 0.6 }).addTo(map);
+                isRadarOn = true;
+                btn.classList.replace('border-slate-700', 'border-blue-500');
+                btn.innerHTML = `<span class="animate-pulse">📡</span> Radar: ON`;
+                printTerminal("Live Precipitation Satellite Layer activated.", "info");
+            } else {
+                if(weatherRadarLayer) map.removeLayer(weatherRadarLayer);
+                isRadarOn = false;
+                btn.classList.replace('border-blue-500', 'border-slate-700');
+                btn.innerHTML = `<span>📡</span> Live Radar`;
+                printTerminal("Satellite Layer deactivated.", "info");
+            }
+        }
+
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        }
+
+        function switchView(viewId, clickedElement) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-view'));
+            const targetView = document.getElementById(viewId);
+            if(targetView) targetView.classList.remove('hidden-view');
+            
+            document.querySelectorAll('.menu-item').forEach(el => {
+                el.classList.remove('active-menu');
+                el.classList.replace('text-slate-800', 'text-slate-400');
+            });
+            if(clickedElement) clickedElement.classList.add('active-menu');
+
+            if(viewId === 'dashboardView' && map) setTimeout(() => { map.invalidateSize(); }, 100);
+            if(viewId === 'riskCenterView') updateCharts(); 
+        }
+
+        function switchTab(tabName) {
+            const tabs = ['summary', 'finance', 'esg'];
+            tabs.forEach(t => {
+                const content = document.getElementById(`tabContent-${t}`);
+                if (content) content.classList.add('hidden');
+                
+                const btn = document.getElementById(`tabBtn-${t}`);
+                if (btn) {
+                    btn.classList.remove('text-blue-400', 'border-blue-500');
+                    btn.classList.add('text-slate-500', 'border-transparent');
+                }
+            });
+            
+            const activeContent = document.getElementById(`tabContent-${tabName}`);
+            if (activeContent) activeContent.classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tabBtn-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-500', 'border-transparent');
+                activeBtn.classList.add('text-blue-400', 'border-blue-500');
+            }
+        }
+
+        async function riskiHesapla() {
+            const btn = document.getElementById('calcBtn');
+            const sc = document.getElementById('sonucEkrani');
+            const riskBox = document.getElementById('mainRiskBox');
+            const altBtn = document.getElementById('altRouteBtn');
+            
+            if(!btn || !sc || !riskBox) return;
+
+            btn.disabled = true; btn.innerText = "Processing...";
+            sc.classList.remove('hidden'); if(altBtn) altBtn.classList.add('hidden');
+            
+            if(activeRouteLine) map.removeLayer(activeRouteLine);
+            if(altRouteLine) map.removeLayer(altRouteLine);
+
+            const source = locations.find(l => l.id === document.getElementById('sourceLoc').value);
+            const target = locations.find(l => l.id === document.getElementById('targetLoc').value);
+            const productCat = document.getElementById('productCat').value;
+            const crisis = document.getElementById('crisisSim').value;
+            const isEcoMode = document.getElementById('ecoToggle').checked;
+
+            let cargoValue = productCat === "73" ? 500000 : productCat === "29" ? 300000 : productCat === "17" ? 120000 : productCat === "48" ? 80000 : 50000;
+            const randomCarrier = carriers[Math.floor(Math.random() * carriers.length)];
+
+            printTerminal(`Analyzing risk metric for corridor: ${source.id} → ${target.id}`, "info");
+
+            try {
+                const response = await fetch('https://global-risk.onrender.com/tahmin_et', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "Order_City": target.cityId, "Category_Id": parseFloat(productCat), "weather_desc": target.weatherDesc })
+                });
+                const data = await response.json();
+                
+                let skor = data.risk_skoru;
+                let cleanStatus = data["Tahmin Sonucu"].replace(/🚨|⚠️|✅/g, '').trim();
+                let isRerouted = false;
+                let extraDelay = 0;
+                let distanceKm = getDistance(source.coords[0], source.coords[1], target.coords[0], target.coords[1]);
+                let co2Emissions = distanceKm * 0.015;
+                let speedKmH = 40;
+
+                if (crisis === 'suez' && ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia'))) {
+                    skor = 94.5; cleanStatus = "CRITICAL: SUEZ BLOCKED"; extraDelay = 14; isRerouted = true; distanceKm += 4500;
+                    printTerminal("Suez Canal congestion threshold breached. Forcing alternative maritime arc.", "error");
+                } else if (crisis === 'storm' && (source.region === 'Asia' || target.region === 'Asia')) {
+                    skor = Math.min(skor + 42, 97.8); cleanStatus = "METEOROLOGICAL ANOMALY"; extraDelay = 5;
+                    printTerminal("Severe Pacific system detected. Transit capability downgraded.", "error");
+                }
+
+                if(isEcoMode && !isRerouted) {
+                    skor = Math.max(10, skor * 0.55); co2Emissions *= 0.35; speedKmH = 20;
+                    cleanStatus = "OPTIMIZED ECO-TRACK";
+                    printTerminal("Eco-routing flag enabled. Slow-steaming protocol initiated.", "success");
+                }
+
+                const baseDays = Math.ceil((distanceKm / speedKmH) / 24);
+                let delayDays = (skor > 60 ? Math.floor(skor/10) : (skor > 35 ? 2 : 0)) + extraDelay;
+                let financialLoss = cargoValue * (skor / 100) * 0.12;
+
+                currentReportData.currentLoss = financialLoss;
+
+                const routePoints = getRouteCoords(source, target, isRerouted);
+                const routeColor = isEcoMode ? '#10b981' : (skor > 60 ? '#ef4444' : skor > 35 ? '#f59e0b' : '#3b82f6');
+                
+                activeRouteLine = L.polyline(routePoints, { color: routeColor, weight: 2.5, opacity: 0.7, dashArray: '6, 8' }).addTo(map);
+                map.fitBounds(activeRouteLine.getBounds(), { padding: [40, 40] });
+                animateCargoShip(routePoints, routeColor);
+
+                document.getElementById('riskVal').innerText = skor.toFixed(1) + '%';
+                document.getElementById('riskVal').className = `text-3xl font-bold tracking-tight ${skor > 60 ? 'text-red-400' : 'text-blue-400'}`;
+                document.getElementById('riskStatus').innerText = cleanStatus;
+                
+                document.getElementById('financialLoss').innerText = '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0});
+                document.getElementById('carbonFootprint').innerText = co2Emissions.toFixed(1) + ' T';
+                document.getElementById('etaDays').innerText = baseDays + ' Days';
+                document.getElementById('delayDays').innerText = '+' + delayDays + ' Days';
+
+                if(skor > 60 && !isEcoMode && altBtn) altBtn.classList.remove('hidden');
+
+                if(skor > 60) statsData.critical++; else if (skor > 35) statsData.warning++; else statsData.safe++;
+                statsData.co2History.push(Math.round(co2Emissions));
+
+                const tbody = document.getElementById('liveShipmentsBody');
+                if(tbody) {
+                    tbody.insertAdjacentHTML('afterbegin', `
+                        <tr class="hover:bg-slate-800/30 transition-colors border-b border-slate-800/50">
+                            <td class="py-3 px-6 font-mono text-slate-400">${'HACI-' + Math.floor(Math.random()*9000+1000)}</td>
+                            <td class="py-3 px-6 text-center text-slate-300 font-mono">$${(cargoValue/1000).toFixed(0)}k</td>
+                            <td class="py-3 px-6">${source.id} → ${target.id}</td>
+                            <td class="py-3 px-6 text-center text-[10px] text-slate-400 font-semibold">${randomCarrier}</td>
+                            <td class="py-3 px-6 text-right font-mono font-medium ${skor > 60 ? 'text-red-400' : 'text-blue-400'}">${skor.toFixed(1)}%</td>
+                        </tr>
+                    `);
+                }
+
+                currentReportData = { trackingId: 'HACI-' + Math.floor(Math.random() * 9000 + 1000), source: source.name, target: target.name, risk: skor.toFixed(1) + '%', status: cleanStatus, loss: '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0}), co2: co2Emissions.toFixed(1) + ' Tons', eta: baseDays + delayDays + ' Days', carrier: randomCarrier };
+                switchTab('summary');
+                printTerminal("Predictive tracking state synchronized successfully.", "success");
+
+            } catch(err) {
+                console.error(err);
+                printTerminal("Pipeline error: Remote model unreachable.", "error");
+            } {
+                btn.disabled = false; btn.innerText = "Execute Assessment"; btn.classList.remove('opacity-80');
+            }
+        }
+
+        function findAltRoute() {
+            const source = locations.find(l => l.id === document.getElementById('sourceLoc').value);
+            const target = locations.find(l => l.id === document.getElementById('targetLoc').value);
+            const safePorts = locations.filter(l => l.congestion === 1 && l.id !== source.id && l.id !== target.id);
+            const transit = safePorts[Math.floor(Math.random() * safePorts.length)];
+
+            printTerminal(`Mitigation engine engaged. Rerouting via safe matrix node: ${transit.id}`, "info");
+
+            if(altRouteLine) map.removeLayer(altRouteLine);
+            const altPoints = [source.coords, transit.coords, target.coords];
+            altRouteLine = L.polyline(altPoints, { color: '#10b981', weight: 2.5, opacity: 0.8, dashArray: '4, 6' }).addTo(map);
+
+            if(shipMarker) map.removeLayer(shipMarker);
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+            animateCargoShip(altPoints, '#10b981');
+
+            setTimeout(() => {
+                document.getElementById('riskVal').innerText = "24.5%";
+                document.getElementById('riskStatus').innerText = "REROUTED GEOFENCE";
+                document.getElementById('riskStatus').className = "text-xs font-bold uppercase mt-1 text-emerald-400";
+                
+                let saved = currentReportData.currentLoss * 0.7;
+                totalAiSavings += saved;
+                document.getElementById('roiCounterContainer').classList.remove('hidden');
+                document.getElementById('roiValue').innerText = '$' + totalAiSavings.toLocaleString('en-US', {maximumFractionDigits:0});
+                
+                printTerminal(`Reroute verified. Mitigated financial damage: $${saved.toLocaleString()}`, "success");
+                document.getElementById('altRouteBtn').classList.add('hidden');
+            }, 800);
+        }
+
+        function updateCharts() {
+            if(!document.getElementById('dynamicRiskChart')) return;
+            if(chartInstances.risk) chartInstances.risk.destroy();
+            if(chartInstances.co2) chartInstances.co2.destroy();
+            let s = statsData.safe || 4; let w = statsData.warning || 2; let c = statsData.critical || 1;
+            let h = statsData.co2History.length > 0 ? statsData.co2History : [180, 310, 140, 290];
+
+            chartInstances.risk = new Chart(document.getElementById('dynamicRiskChart').getContext('2d'), {
+                type: 'doughnut', data: { labels: ['Safe', 'Warning', 'Critical'], datasets: [{ data: [s, w, c], backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }, cutout: '75%' }
+            });
+
+            chartInstances.co2 = new Chart(document.getElementById('dynamicCo2Chart').getContext('2d'), {
+                type: 'bar', data: { labels: h.map((_, i) => 'Leg ' + (i+1)), datasets: [{ label: 'CO2 Tons', data: h, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: '#3b82f6', borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function downloadPDF() {
+            if(!currentReportData.source) return;
+            const template = `
+                <div style="padding: 40px; color: #1e293b; background: white;">
+                    <h1 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 800;">HACI<span style="color:#3b82f6">.</span> Hub Analytics Report</h1>
+                    <hr style="margin: 20px 0; border: 1px solid #e2e8f0;"/>
+                    <h3>Route Definition</h3>
+                    <p><b>Origin:</b> ${currentReportData.source} | <b>Destination:</b> ${currentReportData.target}</p>
+                    <p><b>Assigned Fleet Unit:</b> ${currentReportData.carrier} | <b>Ref:</b> ${currentReportData.trackingId}</p>
+                    <h3>Risk & ESG Diagnostics</h3>
+                    <p><b>ML Variance Probability:</b> ${currentReportData.risk} (${currentReportData.status})</p>
+                    <p><b>Exposure Vector:</b> ${currentReportData.loss} | <b>Carbon Cost:</b> ${currentReportData.co2}</p>
+                </div>`;
+            const pdfDiv = document.getElementById('pdfTemplate');
+            pdfDiv.innerHTML = template; pdfDiv.style.display = 'block';
+            html2pdf().from(pdfDiv).set({ margin: 0.5, filename: `${currentReportData.trackingId}_Report.pdf`, html2canvas: { scale: 2 } }).save().then(() => pdfDiv.style.display = 'none');
+        }
     </script>
 </body>
 </html>
