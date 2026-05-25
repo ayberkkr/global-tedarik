@@ -274,7 +274,7 @@
         let currentReportData = {};
         let chartInstances = {};
         let statsData = { safe: 0, warning: 0, critical: 0, co2History: [] };
-        let map = null;
+        let map = null; // GLOBAL HARİTA TANIMI SADECE TEK BİR YERDE KALDI
 
         const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
         const carriers = ["Maersk Line", "Hapag-Lloyd", "Evergreen", "MSC", "CMA CGM", "COSCO"];
@@ -338,6 +338,7 @@
                 targetSelect.value = "NLRTM";
             }
 
+            // HARİTA GLOBAL DEĞİŞKENE DOĞRUDAN BAĞLANDI (ÇAKIŞMA BİTTİ)
             map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
@@ -356,7 +357,7 @@
                         <div style="background:#0f172a; border:1px solid #334155; padding:12px; border-radius:6px; color:#f8fafc; min-width: 150px; font-family: 'Inter', sans-serif;">
                             <b style="font-size:13px; font-weight:600;">${loc.name}</b><br>
                             <span style="font-size:9px; color:#94a3b8; text-transform:uppercase;">${loc.type}</span>
-                            <div style="margin:6px 0; font-size:10px; border-bottom: 1px solid #1e293b; padding-bottom:4px;">Status: ${statusText}</div>
+                            <div style="margin:6px 0; font-size:10px; border-bottom: 1px solid #1e293b; padding-bottom:6px;">Status: ${statusText}</div>
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div style="font-size: 14px; font-weight: 700;">${Math.round(w.main.temp)}°C</div>
                                 <div style="font-size: 9px; color:#64748b;">☁️ ${loc.weatherDesc}</div>
@@ -381,6 +382,7 @@
         }
 
         function animateCargoShip(routePoints, color='#3b82f6') {
+            if(!map) return;
             if(shipMarker) map.removeLayer(shipMarker);
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             
@@ -401,6 +403,7 @@
         }
 
         function toggleWeatherRadar() {
+            if(!map) return;
             const btn = document.getElementById('radarBtn');
             if(!isRadarOn) {
                 weatherRadarLayer = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`, { maxZoom: 18, opacity: 0.6 }).addTo(map);
@@ -444,7 +447,6 @@
             if(viewId === 'riskCenterView') updateCharts(); 
         }
 
-        // 502. SATIRDAKİ NULL ALANLARI TAMAMEN KORUMAYA ALAN ZIRHLI SİLİNDİR 🛡️
         function switchTab(tabName) {
             const tabs = ['summary', 'finance', 'esg'];
             tabs.forEach(t => {
@@ -472,7 +474,7 @@
             const riskBox = document.getElementById('mainRiskBox');
             const altBtn = document.getElementById('altRouteBtn');
             
-            if(!btn || !sc || !riskBox) return;
+            if(!btn || !sc || !riskBox || !map) return;
 
             btn.disabled = true; btn.innerText = "Processing...";
             sc.classList.remove('hidden'); if(altBtn) altBtn.classList.add('hidden');
@@ -573,6 +575,7 @@
         }
 
         function findAltRoute() {
+            if(!map) return;
             const source = locations.find(l => l.id === document.getElementById('sourceLoc').value);
             const target = locations.find(l => l.id === document.getElementById('targetLoc').value);
             const safePorts = locations.filter(l => l.congestion === 1 && l.id !== source.id && l.id !== target.id);
