@@ -274,8 +274,7 @@
         let currentReportData = {};
         let chartInstances = {};
         let statsData = { safe: 0, warning: 0, critical: 0, co2History: [] };
-        let map = null; // GLOBAL HARİTA TANIMI SADECE TEK BİR YERDE KALDI
-
+        
         const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
         const carriers = ["Maersk Line", "Hapag-Lloyd", "Evergreen", "MSC", "CMA CGM", "COSCO"];
 
@@ -310,64 +309,54 @@
             { id: "JPTYO", cityId: 462, name: "Tokyo, JP", coords: [35.67, 139.65], type: "Asia Hub", congestion: 1, region: "Asia" },
             { id: "INBOM", cityId: 463, name: "Mumbai, IN", coords: [18.93, 72.82], type: "Subcontinent Hub", congestion: 2, region: "Asia" },
             { id: "HKHKG", cityId: 480, name: "Hong Kong, HK", coords: [22.31, 114.16], type: "Major Port", congestion: 2, region: "Asia" },
-            { id: "TWTPE", cityId: 481, name: "Taipei, TW", coords: [25.03, 121.56], type: "Regional Hub", congestion: 1, region: "Asia" },
+            { id: "TWTPE", cityId: 481, name: "Taipei, TW", coords: [25.03, 121.56], text: "Regional Hub", congestion: 1, region: "Asia" },
             { id: "VNSGN", cityId: 482, name: "Ho Chi Minh, VN", coords: [10.82, 106.62], type: "Emerging Hub", congestion: 2, region: "Asia" },
             { id: "MYPKG", cityId: 483, name: "Port Klang, MY", coords: [3.00, 101.39], type: "Transshipment Hub", congestion: 1, region: "Asia" },
             { id: "AUSYD", cityId: 464, name: "Sydney, AU", coords: [-33.86, 151.20], type: "Oceania Hub", congestion: 1, region: "Oceania" },
             { id: "AUMEL", cityId: 484, name: "Melbourne, AU", coords: [-37.81, 144.96], type: "Major Port", congestion: 1, region: "Oceania" }
         ];
 
-        function printTerminal(msg, type = 'info') {
-            const term = document.getElementById('aiTerminalContent');
-            if(!term) return;
-            const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
-            let color = type === 'error' ? 'text-red-400' : type === 'success' ? 'text-emerald-400' : 'text-blue-400';
-            term.innerHTML += `<div class="mb-1"><span class="text-slate-600">[${time}]</span> <span class="${color}">> ${msg}</span></div>`;
-            term.scrollTop = term.scrollHeight;
+        // Harita Başlatma Motoru (Tamamen Senkronize)
+        const map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // Seçim listelerini otomatik doldur
+        const sourceSelect = document.getElementById('sourceLoc');
+        const targetSelect = document.getElementById('targetLoc');
+        if(sourceSelect && targetSelect) {
+            locations.sort((a,b) => a.name.localeCompare(b.name)).forEach(loc => {
+                sourceSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
+                targetSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
+            });
+            sourceSelect.value = "CNSHA";
+            targetSelect.value = "NLRTM";
         }
 
-        window.onload = function() {
-            const sourceSelect = document.getElementById('sourceLoc');
-            const targetSelect = document.getElementById('targetLoc');
-            if(sourceSelect && targetSelect) {
-                locations.sort((a,b) => a.name.localeCompare(b.name)).forEach(loc => {
-                    sourceSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
-                    targetSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
-                });
-                sourceSelect.value = "CNSHA";
-                targetSelect.value = "NLRTM";
-            }
-
-            // HARİTA GLOBAL DEĞİŞKENE DOĞRUDAN BAĞLANDI (ÇAKIŞMA BİTTİ)
-            map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-            locations.forEach(loc => {
-                let auraClass = loc.congestion === 3 ? 'port-aura-red' : loc.congestion === 2 ? 'port-aura-yellow' : 'port-aura-green';
-                const customIcon = L.divIcon({ className: 'custom-radar-icon', html: `<div class="${auraClass}" style="width: 12px; height: 12px;"></div>`, iconSize: [12, 12], iconAnchor: [6, 6] });
-                const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-                
-                let statusText = loc.congestion === 3 ? '<span style="color:#ef4444">High Congestion</span>' : loc.congestion === 2 ? '<span style="color:#f59e0b">Moderate Traffic</span>' : '<span style="color:#10b981">Clear Flow</span>';
-                marker.bindTooltip(`Loading...`, { direction: 'top', className: 'custom-tooltip' });
-                
-                fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${loc.coords[0]}&lon=${loc.coords[1]}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=en`)
-                .then(res => res.json()).then(w => {
-                    loc.weatherDesc = w.weather[0].description.toUpperCase();
-                    marker.setTooltipContent(`
-                        <div style="background:#0f172a; border:1px solid #334155; padding:12px; border-radius:6px; color:#f8fafc; min-width: 150px; font-family: 'Inter', sans-serif;">
-                            <b style="font-size:13px; font-weight:600;">${loc.name}</b><br>
-                            <span style="font-size:9px; color:#94a3b8; text-transform:uppercase;">${loc.type}</span>
-                            <div style="margin:6px 0; font-size:10px; border-bottom: 1px solid #1e293b; padding-bottom:6px;">Status: ${statusText}</div>
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="font-size: 14px; font-weight: 700;">${Math.round(w.main.temp)}°C</div>
-                                <div style="font-size: 9px; color:#64748b;">☁️ ${loc.weatherDesc}</div>
-                            </div>
+        // Liman Aura ve Pop-uplarını Haritaya Ekle
+        locations.forEach(loc => {
+            let auraClass = loc.congestion === 3 ? 'port-aura-red' : loc.congestion === 2 ? 'port-aura-yellow' : 'port-aura-green';
+            const customIcon = L.divIcon({ className: 'custom-radar-icon', html: `<div class="${auraClass}" style="width: 12px; height: 12px;"></div>`, iconSize: [12, 12], iconAnchor: [6, 6] });
+            const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
+            
+            let statusText = loc.congestion === 3 ? '<span style="color:#ef4444">High Congestion</span>' : loc.congestion === 2 ? '<span style="color:#f59e0b">Moderate Traffic</span>' : '<span style="color:#10b981">Clear Flow</span>';
+            marker.bindTooltip(`Loading...`, { direction: 'top', className: 'custom-tooltip' });
+            
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${loc.coords[0]}&lon=${loc.coords[1]}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=en`)
+            .then(res => res.json()).then(w => {
+                loc.weatherDesc = w.weather[0].description.toUpperCase();
+                marker.setTooltipContent(`
+                    <div style="background:#0f172a; border:1px solid #334155; padding:12px; border-radius:6px; color:#f8fafc; min-width: 150px; font-family: 'Inter', sans-serif;">
+                        <b style="font-size:13px; font-weight:600;">${loc.name}</b><br>
+                        <span style="font-size:9px; color:#94a3b8; text-transform:uppercase;">${loc.type}</span>
+                        <div style="margin:8px 0; font-size:10px; border-bottom: 1px solid #1e293b; padding-bottom:4px;">Status: ${statusText}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size: 14px; font-weight: 700;">${Math.round(w.main.temp)}°C</div>
+                            <div style="font-size: 9px; color:#64748b;">☁️ ${loc.weatherDesc}</div>
                         </div>
-                    `);
-                }).catch(e => console.log(e));
-            });
-            printTerminal("Haci Intelligent Platform Core Initialized Successfully.", "success");
-        };
+                    </div>
+                `);
+            }).catch(e => console.log(e));
+        });
 
         function getRouteCoords(source, target, isCrisis = false) {
             if (isCrisis && ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia'))) {
@@ -382,7 +371,6 @@
         }
 
         function animateCargoShip(routePoints, color='#3b82f6') {
-            if(!map) return;
             if(shipMarker) map.removeLayer(shipMarker);
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             
@@ -403,7 +391,6 @@
         }
 
         function toggleWeatherRadar() {
-            if(!map) return;
             const btn = document.getElementById('radarBtn');
             if(!isRadarOn) {
                 weatherRadarLayer = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`, { maxZoom: 18, opacity: 0.6 }).addTo(map);
@@ -474,7 +461,7 @@
             const riskBox = document.getElementById('mainRiskBox');
             const altBtn = document.getElementById('altRouteBtn');
             
-            if(!btn || !sc || !riskBox || !map) return;
+            if(!btn || !sc || !riskBox) return;
 
             btn.disabled = true; btn.innerText = "Processing...";
             sc.classList.remove('hidden'); if(altBtn) altBtn.classList.add('hidden');
@@ -575,7 +562,6 @@
         }
 
         function findAltRoute() {
-            if(!map) return;
             const source = locations.find(l => l.id === document.getElementById('sourceLoc').value);
             const target = locations.find(l => l.id === document.getElementById('targetLoc').value);
             const safePorts = locations.filter(l => l.congestion === 1 && l.id !== source.id && l.id !== target.id);
