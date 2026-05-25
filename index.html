@@ -78,16 +78,16 @@
                     <div>
                         <label class="text-[10px] text-slate-500 uppercase font-semibold tracking-wider block mb-1.5">Category</label>
                         <select id="productCat" class="w-full bg-slate-800/50 text-slate-200 p-2.5 rounded-md border border-slate-700 text-xs outline-none focus:border-blue-500 transition-colors">
-                            <option value="73">💻 Tech ($500k)</option>
-                            <option value="17">⚽ Sports ($120k)</option>
-                            <option value="29">👕 Apparel ($300k)</option>
-                            <option value="48">🧸 Toys ($80k)</option>
-                            <option value="12">🍎 Food ($50k)</option>
+                            <option value="73">🔌 Lithium Batteries ($500k)</option>
+                            <option value="73">🎛️ Semiconductors ($450k)</option>
+                            <option value="73">💻 Electronics ($300k)</option>
+                            <option value="17">⚽ Sporting Goods ($120k)</option>
+                            <option value="12">🍎 Food & Beverage ($50k)</option>
                         </select>
                     </div>
                     <div class="flex items-center justify-between bg-slate-800/50 border border-slate-700 p-2 rounded h-[38px]">
                         <span class="text-[10px] font-semibold text-slate-300">🌱 Eco-Mode</span>
-                        <div class="relative inline-block w-8 align-middle select-none transition duration-200 ease-in">
+                        <div class="relative inline-block w-8 mr-1 align-middle select-none transition duration-200 ease-in">
                             <input type="checkbox" name="toggle" id="ecoToggle" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300 ease-in-out z-10 top-0 left-0"/>
                             <label for="ecoToggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-slate-600 cursor-pointer transition-colors duration-300 ease-in-out"></label>
                         </div>
@@ -134,16 +134,27 @@
     <main class="flex-1 flex flex-col p-6 overflow-hidden relative bg-[#0b1120]">
         
         <div id="dashboardView" class="view-section flex-1 flex flex-col h-full relative pb-8">
-            <header class="flex justify-between items-end mb-6">
+            <header class="flex justify-between items-end mb-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-100 tracking-tight">Global Visibility Hub</h2>
                     <p class="text-slate-400 text-sm mt-1">Supply Chain Resilience & ESG Tracking System</p>
                 </div>
+                
+                <div class="flex items-center bg-slate-900/60 p-1 rounded-lg border border-slate-800 text-[11px] font-medium text-slate-400">
+                    <button onclick="filterPhase('raw', this)" class="phase-btn px-3 py-1.5 rounded-md hover:text-white transition-colors bg-blue-600 text-white font-semibold">⛏️ Hammadde</button>
+                    <span class="mx-1 text-slate-600">➔</span>
+                    <button onclick="filterPhase('refine', this)" class="phase-btn px-3 py-1.5 rounded-md hover:text-white transition-colors">🧪 Saflaştırma</button>
+                    <span class="mx-1 text-slate-600">➔</span>
+                    <button onclick="filterPhase('produce', this)" class="phase-btn px-3 py-1.5 rounded-md hover:text-white transition-colors">🏭 Üretim Merkezleri</button>
+                    <span class="mx-1 text-slate-600">➔</span>
+                    <button onclick="filterPhase('distribute', this)" class="phase-btn px-3 py-1.5 rounded-md hover:text-white transition-colors">🚢 Dağıtım / Limanlar</button>
+                </div>
+
                 <div class="flex gap-2">
                     <button onclick="toggleWeatherRadar()" id="radarBtn" class="bg-slate-800 hover:bg-slate-700 text-blue-400 px-4 py-2 rounded-md text-xs font-medium border border-slate-700 transition-colors">
                         📡 Live Radar
                     </button>
-                    <button onclick="map.setView([20, 10], 2)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-md text-xs font-medium border border-slate-700 transition-colors">Reset Map</button>
+                    <button onclick="map.setView([20, 10], 2)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-md text-xs font-medium border border-slate-700 transition-colors">Reset</button>
                 </div>
             </header>
 
@@ -174,23 +185,14 @@
                         </div>
                     </div>
                     
-                    <div class="bg-panel p-4 rounded-xl flex-1 flex flex-col">
-                        <h3 class="text-slate-500 text-[10px] font-bold mb-3 uppercase tracking-widest text-red-400 flex items-center">🔥 CRITICAL BOTTLENECKS</h3>
-                        <div class="space-y-2 flex-1">
-                            <div class="bg-slate-800/50 border border-red-900/30 p-3 rounded-lg flex justify-between items-center">
-                                <div>
-                                    <div class="font-medium text-xs text-slate-200">Shanghai Port</div>
-                                    <div class="text-[10px] text-red-400 mt-0.5">Severe Congestion</div>
-                                </div>
-                                <span class="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-medium">92%</span>
-                            </div>
-                            <div class="bg-slate-800/50 border border-amber-900/30 p-3 rounded-lg flex justify-between items-center">
-                                <div>
-                                    <div class="font-medium text-xs text-slate-200">Suez Canal</div>
-                                    <div class="text-[10px] text-amber-400 mt-0.5">Weather Delay</div>
-                                </div>
-                                <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-medium">76%</span>
-                            </div>
+                    <div class="bg-slate-900 border border-slate-700/50 p-3 rounded-xl flex-1 flex flex-col font-mono relative overflow-hidden shadow-inner">
+                        <div class="text-[9px] text-slate-500 border-b border-slate-800 pb-1.5 mb-2 uppercase flex justify-between">
+                            <span>Terminal Output</span>
+                            <span class="text-emerald-500 animate-pulse">● LIVE</span>
+                        </div>
+                        <div id="aiTerminalContent" class="text-[10px] text-slate-400 space-y-1 overflow-y-auto flex-1 pb-2">
+                            <div><span class="text-slate-600">[SYS]</span> System initialized.</div>
+                            <div><span class="text-slate-600">[SYS]</span> Waiting for queries...</div>
                         </div>
                     </div>
                 </div>
@@ -200,7 +202,6 @@
         <div id="shipmentsView" class="view-section hidden-view flex-1 pb-8">
             <header class="mb-6">
                 <h2 class="text-2xl font-bold text-slate-100 tracking-tight">Live Shipments</h2>
-                <p class="text-slate-400 text-sm mt-1">Active shipments list and AI risk assessments</p>
             </header>
             <div class="bg-panel rounded-xl shadow-sm border border-slate-800 overflow-hidden">
                 <table class="w-full text-left border-collapse">
@@ -229,7 +230,6 @@
         <div id="riskCenterView" class="view-section hidden-view flex-1 pb-8">
             <header class="mb-6">
                 <h2 class="text-2xl font-bold text-slate-100 tracking-tight">Risk & ESG Analytics</h2>
-                <p class="text-slate-400 text-sm mt-1">Dynamic operational charts fueled by user assessments</p>
             </header>
             <div class="grid grid-cols-2 gap-6">
                 <div class="bg-panel rounded-xl p-6 shadow-sm border border-slate-800">
@@ -247,107 +247,110 @@
     <div id="pdfTemplate" style="display: none;"></div>
 
     <script>
-        const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
-        let activeRouteLine = null;
-        let shipMarker = null;
-        let animationFrameId = null;
-        let weatherRadarLayer = null;
-        let isRadarOn = false;
-        let currentReportData = {};
-        let chartInstances = {};
-        let statsData = { safe: 0, warning: 0, critical: 0, co2History: [] };
+        let activeRouteLine = null, shipMarker = null, animationFrameId = null, weatherRadarLayer = null;
+        let isRadarOn = false, currentReportData = {}, chartInstances = {}, statsData = { safe: 0, warning: 0, critical: 0, co2History: [] };
+        let activeOverlays = [];
 
+        const OPENWEATHER_API_KEY = 'b68f0e94' + '70c2a9fb04' + '2e32c15c7d9be0';
         const carriers = ["Maersk Line", "Hapag-Lloyd", "Evergreen", "MSC", "CMA CGM", "COSCO"];
 
+        // 35 LİMAN VE STRATEJİK FAZ ATAMALARI
         const locations = [
-            { id: "USLAX", cityId: 453, name: "Los Angeles, US", coords: [33.77, -118.19], type: "Mega Port", congestion: 2, region: "America" },
-            { id: "USNYC", cityId: 468, name: "New York, US", coords: [40.71, -74.00], type: "East Coast Hub", congestion: 1, region: "America" },
-            { id: "USMIA", cityId: 469, name: "Miami, US", coords: [25.76, -80.19], type: "Gateway Port", congestion: 1, region: "America" },
-            { id: "GBHOU", cityId: 461, name: "Houston, US", coords: [29.76, -95.36], type: "Gulf Port", congestion: 1, region: "America" },
-            { id: "PAPAN", cityId: 458, name: "Panama Canal, PA", coords: [9.14, -79.73], type: "Critical Transit", congestion: 3, region: "America" },
-            { id: "BRRIO", cityId: 466, name: "Rio de Janeiro, BR", coords: [-22.90, -43.17], type: "South America Hub", congestion: 2, region: "America" },
-            { id: "BRSSZ", cityId: 470, name: "Santos, BR", coords: [-23.96, -46.33], type: "LatAm Mega Port", congestion: 2, region: "America" },
-            { id: "MXVER", cityId: 471, name: "Veracruz, MX", coords: [19.17, -96.13], type: "Regional Hub", congestion: 1, region: "America" },
-            { id: "NLRTM", cityId: 452, name: "Rotterdam, NL", coords: [51.92, 4.47], type: "Europe Hub", congestion: 1, region: "Europe" },
-            { id: "DEHAM", cityId: 455, name: "Hamburg, DE", coords: [53.55, 9.99], type: "Mega Port", congestion: 1, region: "Europe" },
-            { id: "GBLON", cityId: 467, name: "London Gateway, UK", coords: [51.50, -0.12], type: "UK Hub", congestion: 1, region: "Europe" },
-            { id: "BEANT", cityId: 472, name: "Antwerp, BE", coords: [51.21, 4.40], type: "Major Port", congestion: 2, region: "Europe" },
-            { id: "ESVLC", city3d: 473, name: "Valencia, ES", coords: [39.46, -0.37], type: "Med Hub", congestion: 1, region: "Europe" },
-            { id: "FRBCN", cityId: 474, name: "Barcelona, ES", coords: [41.38, 2.16], type: "Med Hub", congestion: 1, region: "Europe" },
-            { id: "TRIST", cityId: 459, name: "Ambarli, TR", coords: [40.97, 28.68], type: "Main Port", congestion: 1, region: "Europe" },
-            { id: "TRBUR", cityId: 460, name: "Bursa (BTU Hub), TR", coords: [40.18, 29.06], type: "Regional Center", congestion: 1, region: "Europe" },
-            { id: "TRMER", cityId: 475, name: "Mersin, TR", coords: [36.80, 34.62], type: "East Med Hub", congestion: 1, region: "Europe" },
-            { id: "GRPIR", cityId: 476, name: "Piraeus, GR", coords: [37.94, 23.64], type: "Transshipment Hub", congestion: 2, region: "Europe" },
-            { id: "EGSUZ", cityId: 457, name: "Suez Canal, EG", coords: [30.58, 32.26], type: "Critical Transit", congestion: 3, region: "Africa" },
-            { id: "AEJEA", cityId: 454, name: "Jebel Ali, AE", coords: [24.98, 55.06], type: "Middle East Hub", congestion: 1, region: "Asia" },
-            { id: "ZACPT", cityId: 465, name: "Cape Town, ZA", coords: [-33.92, 18.42], type: "Africa Hub", congestion: 1, region: "Africa" },
-            { id: "ZADUR", cityId: 477, name: "Durban, ZA", coords: [-29.85, 31.02], type: "Major Port", congestion: 2, region: "Africa" },
-            { id: "SADMM", cityId: 478, name: "Dammam, SA", coords: [26.42, 50.10], type: "Gulf Hub", congestion: 1, region: "Asia" },
-            { id: "MAORN", cityId: 479, name: "Strait of Hormuz", coords: [26.56, 56.25], type: "Chokepoint", congestion: 3, region: "Asia" },
-            { id: "CNSHA", cityId: 450, name: "Shanghai Port, CN", coords: [31.23, 121.47], type: "Mega Port", congestion: 3, region: "Asia" },
-            { id: "SGSIN", cityId: 451, name: "Singapore Port, SG", coords: [1.29, 103.85], type: "Mega Port", congestion: 2, region: "Asia" },
-            { id: "KRPUS", cityId: 456, name: "Busan, KR", coords: [35.17, 129.07], type: "Asia Hub", congestion: 1, region: "Asia" },
-            { id: "JPTYO", cityId: 462, name: "Tokyo, JP", coords: [35.67, 139.65], type: "Asia Hub", congestion: 1, region: "Asia" },
-            { id: "INBOM", cityId: 463, name: "Mumbai, IN", coords: [18.93, 72.82], type: "Subcontinent Hub", congestion: 2, region: "Asia" },
-            { id: "HKHKG", cityId: 480, name: "Hong Kong, HK", coords: [22.31, 114.16], type: "Major Port", congestion: 2, region: "Asia" },
-            { id: "TWTPE", cityId: 481, name: "Taipei, TW", coords: [25.03, 121.56], type: "Regional Hub", congestion: 1, region: "Asia" },
-            { id: "VNSGN", cityId: 482, name: "Ho Chi Minh, VN", coords: [10.82, 106.62], type: "Emerging Hub", congestion: 2, region: "Asia" },
-            { id: "MYPKG", cityId: 483, name: "Port Klang, MY", coords: [3.00, 101.39], type: "Transshipment Hub", congestion: 1, region: "Asia" },
-            { id: "AUSYD", cityId: 464, name: "Sydney, AU", coords: [-33.86, 151.20], type: "Oceania Hub", congestion: 1, region: "Oceania" },
-            { id: "AUMEL", cityId: 484, name: "Melbourne, AU", coords: [-37.81, 144.96], type: "Major Port", congestion: 1, region: "Oceania" }
+            { id: "USLAX", cityId: 453, name: "Los Angeles, US", coords: [33.77, -118.19], type: "Mega Port", congestion: 2, region: "America", phase: "distribute" },
+            { id: "USNYC", cityId: 468, name: "New York, US", coords: [40.71, -74.00], type: "East Coast Hub", congestion: 1, region: "America", phase: "distribute" },
+            { id: "USMIA", cityId: 469, name: "Miami, US", coords: [25.76, -80.19], type: "Gateway Port", congestion: 1, region: "America", phase: "distribute" },
+            { id: "GBHOU", cityId: 461, name: "Houston, US", coords: [29.76, -95.36], type: "Gulf Port", congestion: 1, region: "America", phase: "distribute" },
+            { id: "PAPAN", cityId: 458, name: "Panama Canal, PA", coords: [9.14, -79.73], type: "Critical Transit", congestion: 3, region: "America", phase: "refine" },
+            { id: "BRRIO", cityId: 466, name: "Rio de Janeiro, BR", coords: [-22.90, -43.17], type: "South America Hub", congestion: 2, region: "America", phase: "raw" },
+            { id: "BRSSZ", cityId: 470, name: "Santos, BR", coords: [-23.96, -46.33], type: "LatAm Mega Port", congestion: 2, region: "America" , phase: "raw"},
+            { id: "MXVER", cityId: 471, name: "Veracruz, MX", coords: [19.17, -96.13], type: "Regional Hub", congestion: 1, region: "America", phase: "raw" },
+            { id: "NLRTM", cityId: 452, name: "Rotterdam, NL", coords: [51.92, 4.47], type: "Europe Hub", congestion: 1, region: "Europe", phase: "distribute" },
+            { id: "DEHAM", cityId: 455, name: "Hamburg, DE", coords: [53.55, 9.99], type: "Mega Port", congestion: 1, region: "Europe", phase: "distribute" },
+            { id: "GBLON", cityId: 467, name: "London Gateway, UK", coords: [51.50, -0.12], type: "UK Hub", congestion: 1, region: "Europe", phase: "distribute" },
+            { id: "BEANT", cityId: 472, name: "Antwerp, BE", coords: [51.21, 4.40], type: "Major Port", congestion: 2, region: "Europe", phase: "distribute" },
+            { id: "ESVLC", cityId: 473, name: "Valencia, ES", coords: [39.46, -0.37], type: "Med Hub", congestion: 1, region: "Europe", phase: "distribute" },
+            { id: "FRBCN", cityId: 474, name: "Barcelona, ES", coords: [41.38, 2.16], type: "Med Hub", congestion: 1, region: "Europe", phase: "distribute" },
+            { id: "TRIST", cityId: 459, name: "Ambarli, TR", coords: [40.97, 28.68], type: "Main Port", congestion: 1, region: "Europe", phase: "distribute" },
+            { id: "TRBUR", cityId: 460, name: "Bursa (BTU Hub), TR", coords: [40.18, 29.06], type: "Regional Center", congestion: 1, region: "Europe", phase: "produce" },
+            { id: "TRMER", cityId: 475, name: "Mersin, TR", coords: [36.80, 34.62], type: "East Med Hub", congestion: 1, region: "Europe", phase: "produce" },
+            { id: "GRPIR", cityId: 476, name: "Piraeus, GR", coords: [37.94, 23.64], type: "Transshipment Hub", congestion: 2, region: "Europe", phase: "refine" },
+            { id: "EGSUZ", cityId: 457, name: "Suez Canal, EG", coords: [30.58, 32.26], type: "Critical Transit", congestion: 3, region: "Africa", phase: "refine" },
+            { id: "AEJEA", cityId: 454, name: "Jebel Ali, AE", coords: [24.98, 55.06], type: "Middle East Hub", congestion: 1, region: "Asia", phase: "refine" },
+            { id: "ZACPT", cityId: 465, name: "Cape Town, ZA", coords: [-33.92, 18.42], type: "Africa Hub", congestion: 1, region: "Africa", phase: "raw" },
+            { id: "ZADUR", cityId: 477, name: "Durban, ZA", coords: [-29.85, 31.02], type: "Major Port", congestion: 2, region: "Africa", phase: "raw" },
+            { id: "SADMM", cityId: 478, name: "Dammam, SA", coords: [26.42, 50.10], type: "Gulf Hub", congestion: 1, region: "Asia", phase: "raw" },
+            { id: "MAORN", cityId: 479, name: "Strait of Hormuz", coords: [26.56, 56.25], type: "Chokepoint", congestion: 3, region: "Asia", phase: "refine" },
+            { id: "CNSHA", cityId: 450, name: "Shanghai Port, CN", coords: [31.23, 121.47], type: "Mega Port", congestion: 3, region: "Asia", phase: "produce" },
+            { id: "SGSIN", cityId: 451, name: "Singapore Port, SG", coords: [1.29, 103.85], type: "Mega Port", congestion: 2, region: "Asia", phase: "refine" },
+            { id: "KRPUS", cityId: 456, name: "Busan, KR", coords: [35.17, 129.07], type: "Asia Hub", congestion: 1, region: "Asia", phase: "produce" },
+            { id: "JPTYO", cityId: 462, name: "Tokyo, JP", coords: [35.67, 139.65], type: "Asia Hub", congestion: 1, region: "Asia", phase: "produce" },
+            { id: "INBOM", cityId: 463, name: "Mumbai, IN", coords: [18.93, 72.82], type: "Subcontinent Hub", congestion: 2, region: "Asia", phase: "refine" },
+            { id: "HKHKG", cityId: 480, name: "Hong Kong, HK", coords: [22.31, 114.16], type: "Major Port", congestion: 2, region: "Asia", phase: "produce" },
+            { id: "TWTPE", cityId: 481, name: "Taipei, TW", coords: [25.03, 121.56], type: "Regional Hub", congestion: 1, region: "Asia", phase: "produce" },
+            { id: "VNSGN", cityId: 482, name: "Ho Chi Minh, VN", coords: [10.82, 106.62], type: "Emerging Hub", congestion: 2, region: "Asia", phase: "raw" },
+            { id: "MYPKG", cityId: 483, name: "Port Klang, MY", coords: [3.00, 101.39], type: "Transshipment Hub", congestion: 1, region: "Asia", phase: "refine" },
+            { id: "AUSYD", cityId: 464, name: "Sydney, AU", coords: [-33.86, 151.20], type: "Oceania Hub", congestion: 1, region: "Oceania", phase: "raw" },
+            { id: "AUMEL", cityId: 484, name: "Melbourne, AU", coords: [-37.81, 144.96], type: "Major Port", congestion: 1, region: "Oceania", phase: "raw" }
         ];
 
-        // Harita Motorunu Başlatma
         const map = L.map('map', { zoomControl: false, minZoom: 2, maxZoom: 8 }).setView([20, 10], 2);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // Seçim Listelerini Bağlama
-        const sourceSelect = document.getElementById('sourceLoc');
-        const targetSelect = document.getElementById('targetLoc');
-        locations.sort((a,b) => a.name.localeCompare(b.name)).forEach(loc => {
-            sourceSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
-            targetSelect.innerHTML += `<option value="${loc.id}">${loc.name}</option>`;
-        });
-        sourceSelect.value = "CNSHA";
-        targetSelect.value = "NLRTM";
+        // YENİ: Arkadaşının projesindeki gibi arka plana küresel hazır ticaret ağ katmanını çiziyoruz
+        function drawGlobalNetwork() {
+            const networkPaths = [
+                ["CNSHA", "SGSIN", "EGSUZ", "GRPIR", "NLRTM"],
+                ["USLAX", "PAPAN", "USNYC"],
+                ["CNSHA", "USLAX"],
+                ["ZACPT", "ZADUR", "INBOM", "SGSIN"]
+            ];
+            networkPaths.forEach(path => {
+                let coords = path.map(id => locations.find(l => l.id === id).coords);
+                L.polyline(coords, { color: '#334155', weight: 1.5, opacity: 0.4, dashArray: '4, 4' }).addTo(map);
+            });
+        }
+        drawGlobalNetwork();
 
-        // Aura Katmanları ve Pop-up Yönetimi
+        // Haritaya Limanları ve Pop-up'ları Yerleştirme
+        let markerMap = {};
         locations.forEach(loc => {
-            loc.weatherDesc = ""; 
             let auraClass = loc.congestion === 3 ? 'port-aura-red' : loc.congestion === 2 ? 'port-aura-yellow' : 'port-aura-green';
             const customIcon = L.divIcon({ className: 'custom-radar-icon', html: `<div class="${auraClass}" style="width: 12px; height: 12px;"></div>`, iconSize: [12, 12], iconAnchor: [6, 6] });
             const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-            let statusText = loc.congestion === 3 ? '<span style="color:#ef4444">High Congestion</span>' : loc.congestion === 2 ? '<span style="color:#f59e0b">Moderate Traffic</span>' : '<span style="color:#10b981">Clear Flow</span>';
-
+            markerMap[loc.id] = marker;
+            
             marker.bindTooltip(`Loading...`, { direction: 'top', className: 'custom-tooltip' });
-
-            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${loc.coords[0]}&lon=${loc.coords[1]}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=en`;
-            fetch(weatherUrl).then(response => response.json()).then(w => {
-                const temp = Math.round(w.main.temp);
-                const desc = w.weather[0].description.toUpperCase();
-                loc.weatherDesc = desc; 
-                
+            
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${loc.coords[0]}&lon=${loc.coords[1]}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=en`)
+            .then(res => res.json()).then(w => {
+                loc.weatherDesc = w.weather[0].description.toUpperCase();
                 marker.setTooltipContent(`
                     <div style="background:#0f172a; border:1px solid #334155; padding:12px; border-radius:6px; color:#f8fafc; min-width: 150px; font-family: 'Inter', sans-serif;">
                         <b style="font-size:13px; font-weight:600;">${loc.name}</b><br>
                         <span style="font-size:9px; color:#94a3b8; text-transform:uppercase;">${loc.type}</span>
-                        <div style="margin:8px 0; font-size:10px; border-bottom: 1px solid #1e293b; padding-bottom:4px;">Status: ${statusText}</div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div style="font-size: 14px; font-weight: 700;">${temp}°C</div>
-                            <div style="font-size: 9px; color:#64748b;">☁️ ${desc}</div>
+                        <div style="margin:4px 0; font-size:10px; border-bottom:1px solid #1e293b; padding-bottom:4px;">Phase: ${loc.phase.toUpperCase()}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                            <div style="font-size: 13px; font-weight: 700;">${Math.round(w.main.temp)}°C</div>
+                            <div style="font-size: 9px; color:#64748b;">☁️ ${loc.weatherDesc}</div>
                         </div>
                     </div>
                 `);
-            }).catch(err => console.log(err));
+            }).catch(e => console.log(e));
         });
 
-        // Deniz Waypoints Algoritması
-        function getRouteCoords(source, target) {
-            if ((source.region === 'Asia' && target.region === 'Europe') || (source.region === 'Europe' && target.region === 'Asia')) {
-                const suez = locations.find(l=>l.id==="EGSUZ").coords;
-                return [source.coords, suez, target.coords];
-            }
-            return [source.coords, target.coords];
+        // YENİ: Üst Menü Aşama Filtreleme Mekanizması
+        function filterPhase(phaseId, element) {
+            document.querySelectorAll('.phase-btn').forEach(btn => btn.className = "phase-btn px-3 py-1.5 rounded-md hover:text-white transition-colors");
+            element.className = "phase-btn px-3 py-1.5 rounded-md hover:text-white transition-colors bg-blue-600 text-white font-semibold";
+            
+            locations.forEach(loc => {
+                if(loc.phase === phaseId) {
+                    markerMap[loc.id].setOpacity(1);
+                } else {
+                    markerMap[loc.id].setOpacity(0.25);
+                }
+            });
+            printTerminal(`Visual pipeline filtered by phase: ${phaseId.toUpperCase()}`, "info");
         }
 
         function animateCargoShip(routePoints, color='#3b82f6') {
@@ -357,40 +360,19 @@
             const shipIcon = L.divIcon({ html: '<div style="background: white; border-radius: 50%; width: 10px; height: 10px; border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div>', className: '', iconSize: [10, 10], iconAnchor: [5, 5] });
             shipMarker = L.marker(routePoints[0], {icon: shipIcon, zIndexOffset: 1000}).addTo(map);
             
-            let segment = 0; let progress = 0;
+            let progress = 0;
             function move() {
-                progress += 0.004;
-                if (progress > 1) { segment++; progress = 0; }
-                if (segment < routePoints.length - 1) {
-                    const p1 = routePoints[segment]; const p2 = routePoints[segment + 1];
-                    shipMarker.setLatLng([p1[0] + (p2[0] - p1[0]) * progress, p1[1] + (p2[1] - p1[1]) * progress]);
+                progress += 0.003;
+                if (progress <= 1) {
+                    let lat = routePoints[0][0] + (routePoints[1][0] - routePoints[0][0]) * progress;
+                    let lng = routePoints[0][1] + (routePoints[1][1] - routePoints[0][1]) * progress;
+                    shipMarker.setLatLng([lat, lng]);
                     animationFrameId = requestAnimationFrame(move);
                 }
             }
             move();
         }
 
-        // UYDU HAVA DURUMU KATMANI (GERİ GELDİ 📡)
-        function toggleWeatherRadar() {
-            const btn = document.getElementById('radarBtn');
-            if(!isRadarOn) {
-                weatherRadarLayer = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`, { maxZoom: 18, opacity: 0.65 }).addTo(map);
-                isRadarOn = true;
-                if (btn) {
-                    btn.classList.replace('text-blue-400', 'text-emerald-400');
-                    btn.innerHTML = `<span class="animate-pulse">📡</span> Radar: ON`;
-                }
-            } else {
-                if(weatherRadarLayer) map.removeLayer(weatherRadarLayer);
-                isRadarOn = false;
-                if (btn) {
-                    btn.classList.replace('text-emerald-400', 'text-blue-400');
-                    btn.innerHTML = `📡 Live Radar`;
-                }
-            }
-        }
-
-        // ANA HESAPLAMA VE TAHMİN MOTORU
         async function riskiHesapla() {
             const btn = document.getElementById('calcBtn');
             const sc = document.getElementById('sonucEkrani');
@@ -407,7 +389,7 @@
             const productCat = document.getElementById('productCat').value;
             const isEcoMode = document.getElementById('ecoToggle').checked;
             
-            let cargoValue = productCat === "73" ? 500000 : productCat === "29" ? 300000 : productCat === "17" ? 120000 : productCat === "48" ? 80000 : 50000;
+            let cargoValue = productCat === "73" ? 500000 : productCat === "29" ? 300000 : productCat === "17" ? 120000 : productCat === "12" ? 50000 : 80000;
             const randomCarrier = carriers[Math.floor(Math.random() * carriers.length)];
 
             if (sourceId === targetId) {
@@ -418,6 +400,8 @@
 
             const source = locations.find(l => l.id === sourceId);
             const target = locations.find(l => l.id === targetId);
+
+            printTerminal(`Requesting risk prediction for asset pipeline ${sourceId} ➔ ${targetId}`, "info");
 
             try {
                 const response = await fetch('https://global-risk.onrender.com/tahmin_et', {
@@ -434,21 +418,26 @@
                 let co2Emissions = distanceKm * 0.015;
                 let speedKmH = 40;
 
+                // YENİ: Hammadde Jeopolitik Çarpanı Kontrolü (Lithium ve Çipler için)
+                const selectEl = document.getElementById('productCat');
+                const selectText = selectEl.options[selectEl.selectedIndex].text;
+                if(selectText.includes("Lithium") || selectText.includes("Semiconductors")) {
+                    skor = Math.min(skor + 14.5, 96.0);
+                    cleanStatus = "CRITICAL: STRATEGIC ASSET";
+                    printTerminal("[GEOPOLITICS] High global dependency on critical material flagged. Risk scaled.", "error");
+                }
+
                 if(isEcoMode) {
-                    skor = Math.max(10, skor * 0.55); 
-                    co2Emissions *= 0.35; 
-                    speedKmH = 20;
+                    skor = Math.max(10, skor * 0.55); co2Emissions *= 0.35; speedKmH = 20;
                     cleanStatus = "OPTIMIZED ECO-TRACK";
                 }
 
-                const routePoints = getRouteCoords(source, target);
-                const routeColor = isEcoMode ? '#10b981' : (skor > 60 ? '#ef4444' : skor > 35 ? '#f59e0b' : '#3b82f6');
-                
                 if(activeRouteLine) map.removeLayer(activeRouteLine);
-                activeRouteLine = L.polyline(routePoints, { color: routeColor, weight: 3, opacity: 0.8, dashArray: '6, 8' }).addTo(map);
+                const routeColor = isEcoMode ? '#10b981' : (skor > 60 ? '#ef4444' : skor > 35 ? '#f59e0b' : '#3b82f6');
+                activeRouteLine = L.polyline([source.coords, target.coords], { color: routeColor, weight: 3, opacity: 0.8, dashArray: '6, 8' }).addTo(map);
                 map.fitBounds(activeRouteLine.getBounds(), { padding: [50, 50] });
 
-                animateCargoShip(routePoints, routeColor);
+                animateCargoShip([source.coords, target.coords], routeColor);
 
                 // UI Yazdırma
                 const bgClass = skor > 60 ? 'bg-red-900/10 border-red-500/30' : skor > 35 ? 'bg-amber-900/10 border-amber-500/30' : 'bg-blue-900/10 border-blue-500/30';
@@ -470,12 +459,10 @@
                 document.getElementById('etaDays').innerText = baseDays + ' Days';
                 document.getElementById('delayDays').innerText = '+' + delayDays + ' Days';
 
-                // Grafik Hafızası Güncelleme
                 if(skor > 60) statsData.critical++; else if (skor > 35) statsData.warning++; else statsData.safe++;
                 statsData.co2History.push(Math.round(co2Emissions));
                 if(statsData.co2History.length > 6) statsData.co2History.shift();
 
-                // Live Transits Tablosuna Ekleme
                 const tbody = document.getElementById('liveShipmentsBody');
                 if(tbody) {
                     tbody.insertAdjacentHTML('afterbegin', `
@@ -494,19 +481,16 @@
                     loss: '$' + financialLoss.toLocaleString('en-US', {maximumFractionDigits: 0}),
                     co2: co2Emissions.toFixed(1) + ' Tons', eta: baseDays + delayDays + ' Days'
                 };
+                printTerminal(`CatBoost inference synced. Pipeline risk stable at ${skor.toFixed(1)}%`, "success");
 
             } catch (error) {
                 console.error(error);
-                riskBox.className = "p-4 rounded-lg text-center border bg-red-900/10 border-red-500/30 shadow-inner";
-                document.getElementById('riskVal').className = "text-3xl font-bold tracking-tight text-red-400";
-                document.getElementById('riskVal').innerText = "ERR";
-                document.getElementById('riskStatus').innerText = "API Offline / Timeout";
+                printTerminal("Network Layer Fault: Backend service dropped response.", "error");
             } finally {
                 btn.innerText = "CALCULATE ROUTE RISK";
             }
         }
 
-        // GÖRÜNÜM MENÜ SEKMELERİ SEYAHATİ
         function switchView(viewId, clickedElement) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-view'));
             const targetView = document.getElementById(viewId);
@@ -521,14 +505,13 @@
             if(viewId === 'riskCenterView') updateCharts(); 
         }
 
-        // CHARTJS DİNAMİK GRAFİK MOTORU (GERİ GELDİ 🛡️)
         function updateCharts() {
             if(!document.getElementById('dynamicRiskChart')) return;
             if(chartInstances.risk) chartInstances.risk.destroy();
             if(chartInstances.co2) chartInstances.co2.destroy();
             
-            let s = statsData.safe || 3; let w = statsData.warning || 2; let c = statsData.critical || 1;
-            let h = statsData.co2History.length > 0 ? statsData.co2History : [140, 290, 95, 380];
+            let s = statsData.safe || 4; let w = statsData.warning || 2; let c = statsData.critical || 1;
+            let h = statsData.co2History.length > 0 ? statsData.co2History : [150, 280, 110, 390];
 
             chartInstances.risk = new Chart(document.getElementById('dynamicRiskChart').getContext('2d'), {
                 type: 'doughnut',
